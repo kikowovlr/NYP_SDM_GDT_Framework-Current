@@ -4,7 +4,7 @@
  By: Toh Da Jun
  Date: Mar 2020
  */
-#include "Player2D.h"
+#include "Topdee.h"
 
 #include <iostream>
 using namespace std;
@@ -24,7 +24,7 @@ using namespace std;
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
  */
-CPlayer2D::CPlayer2D(void)
+CTopdee::CTopdee(void)
 	: pMap2D(NULL)
 	, pKeyboardController(NULL)
 	, pMouseController(NULL)
@@ -39,7 +39,7 @@ CPlayer2D::CPlayer2D(void)
 /**
  @brief Destructor This destructor has protected access modifier as this class will be a Singleton
  */
-CPlayer2D::~CPlayer2D(void)
+CTopdee::~CTopdee(void)
 {
 	// We won't delete this since it was created elsewhere
 	pMouseController = NULL;
@@ -63,7 +63,7 @@ CPlayer2D::~CPlayer2D(void)
 /**
   @brief Initialise this instance
   */
-bool CPlayer2D::Init(void)
+bool CTopdee::Init(void)
 {
 	// Store the keyboard controller singleton instance here
 	pKeyboardController = CKeyboardController::GetInstance();
@@ -90,15 +90,16 @@ bool CPlayer2D::Init(void)
 	// Find the indices for the player in arrMapInfo, and assign it to pPlayer2D
 	unsigned int uiRow = -1;
 	unsigned int uiCol = -1;
-	if (pMap2D->FindValue(200, uiRow, uiCol) == false)
+	// start with toodee
+	if (pMap2D->FindValue(201, uiRow, uiCol) == false)
 		return false;	// Unable to find the start position of the player, so quit this game
 
 	// Erase the value of the player in the arrMapInfo
 	pMap2D->SetMapInfo(uiRow, uiCol, 0);
 
 	// Set the start position of the Player to iRow and iCol
-	vec2Position = glm::vec2(	uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x, 
-								uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y);
+	vec2Position = glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
+		uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y);
 	playerStartPos = vec2Position;
 	vec2MovementVelocity = glm::vec2(1, 1);
 
@@ -114,38 +115,38 @@ bool CPlayer2D::Init(void)
 	glBindVertexArray(VAO);
 
 	// Teacher texture
-	//// Load the player texture 
-	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_player.png", true);
-	//if (iTextureID == 0)
-	//{
-	//	cout << "Unable to load Image/scene2d_player.png" << endl;
-	//	return false;
-	//}
-
-	//////CS: Create the Quad Mesh using the mesh builder
-	////p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
-
-	////CS: Create the animated sprite and setup the animation 
-	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	//pAnimatedSprites->AddAnimation("idle", 0, 2);
-	//pAnimatedSprites->AddAnimation("right", 3, 5);
-	//pAnimatedSprites->AddAnimation("left", 6, 8);
-	////CS: Play the "idle" animation as default
-	//pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
-
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
+	// Load the player texture 
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_enemy.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/SpriteBunny.png" << endl;
+		cout << "Unable to load Image/scene2d_enemy.png" << endl;
 		return false;
 	}
 
+	////CS: Create the Quad Mesh using the mesh builder
+	//p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
+
 	//CS: Create the animated sprite and setup the animation 
-	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	pAnimatedSprites->AddAnimation("right", 0, 2);
-	pAnimatedSprites->AddAnimation("left", 3, 5);
-	// default anim is right
-	pAnimatedSprites->PlayAnimation("right", -1, 2.f);
+	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	pAnimatedSprites->AddAnimation("idle", 0, 2);
+	pAnimatedSprites->AddAnimation("right", 3, 5);
+	pAnimatedSprites->AddAnimation("left", 6, 8);
+	//CS: Play the "idle" animation as default
+	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
+
+	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
+	//if (iTextureID == 0)
+	//{
+	//	cout << "Unable to load Image/SpriteBunny.png" << endl;
+	//	return false;
+	//}
+
+	////CS: Create the animated sprite and setup the animation 
+	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	//pAnimatedSprites->AddAnimation("right", 0, 2);
+	//pAnimatedSprites->AddAnimation("left", 3, 5);
+	//// default anim is right
+	//pAnimatedSprites->PlayAnimation("right", -1, 2.f);
 	 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -176,7 +177,7 @@ bool CPlayer2D::Init(void)
 /**
  @brief Reset this instance
  */
-bool CPlayer2D::Reset()
+bool CTopdee::Reset()
 {
 	unsigned int uiRow = -1;
 	unsigned int uiCol = -1;
@@ -208,7 +209,7 @@ bool CPlayer2D::Reset()
  @param dElapsedTime A const double variable contains the time since the last frame
  @return A bool variable to indicate this method successfully completed its tasks
  */
-bool CPlayer2D::Update(const double dElapsedTime)
+bool CTopdee::Update(const double dElapsedTime)
 {
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
@@ -457,7 +458,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 /**
  @brief Set up the OpenGL display environment before rendering
  */
-void CPlayer2D::PreRender(void)
+void CTopdee::PreRender(void)
 {
 	// Activate blending mode
 	glEnable(GL_BLEND);
@@ -470,7 +471,7 @@ void CPlayer2D::PreRender(void)
 /**
  @brief Render this instance
  */
-void CPlayer2D::Render(void)
+void CTopdee::Render(void)
 {
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
@@ -508,13 +509,13 @@ void CPlayer2D::Render(void)
 /**
  @brief PostRender Set up the OpenGL display environment after rendering.
  */
-void CPlayer2D::PostRender(void)
+void CTopdee::PostRender(void)
 {
 	// Disable blending
 	glDisable(GL_BLEND);
 }
 
-CPlayer2D::ToodeeState CPlayer2D::SaveState() const
+CTopdee::TopdeeState CTopdee::SaveState() const
 {
 	return {
 		vec2Position,
@@ -524,7 +525,7 @@ CPlayer2D::ToodeeState CPlayer2D::SaveState() const
 	};
 }
 
-void CPlayer2D::LoadState(const ToodeeState& state)
+void CTopdee::LoadState(const TopdeeState& state)
 {
 	vec2Position = state.position;
 	vec2MovementVelocity = state.velocity;
@@ -535,7 +536,7 @@ void CPlayer2D::LoadState(const ToodeeState& state)
  @brief Let player interact with the map. You can add collectibles such as powerups and health here.
  Decides whether smth gets destroyed after player passes it or not
  */
-void CPlayer2D::InteractWithMap(void)
+void CTopdee::InteractWithMap(void)
 {
 	int iPositionX = 0;
 	int iPositionY = 0;
@@ -584,7 +585,7 @@ void CPlayer2D::InteractWithMap(void)
 /**
  @brief Update the health and lives.
  */
-void CPlayer2D::UpdateHealthLives(void)
+void CTopdee::UpdateHealthLives(void)
 {
 	// Update health and lives
 	pInventoryItem = pInventoryManager->GetItem("Health");

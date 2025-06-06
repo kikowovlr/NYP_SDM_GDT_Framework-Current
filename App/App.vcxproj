@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Scene2D\CharacterManager.cpp" />
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Scene2D\GameManager.cpp" />
@@ -23,8 +24,10 @@
     <ClCompile Include="Source\Scene2D\Projectile2D.cpp" />
     <ClCompile Include="Source\Scene2D\ProjectileManager2D.cpp" />
     <ClCompile Include="Source\Scene2D\Scene2D.cpp" />
+    <ClCompile Include="Source\Scene2D\Topdee.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Scene2D\CharacterManager.h" />
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\Scene2D\GameManager.h" />
     <ClInclude Include="Source\Scene2D\GUI_Scene2D.h" />
@@ -37,6 +40,7 @@
     <ClInclude Include="Source\Scene2D\ProjectileManager2D.h" />
     <ClInclude Include="Source\Scene2D\Scene2D.h" />
     <ClInclude Include="Source\Scene2D\ShootStatus.h" />
+    <ClInclude Include="Source\Scene2D\Topdee.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B172635-4E2B-46F1-A403-08F4194D00F5}</ProjectGuid>

@@ -183,17 +183,16 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(99, iTextureID));
 	}
-	// Load metal tile texture
 	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_MetalTile.tga", true);
 	//if (iTextureID == 0)
 	//{
-	//	cout << "Unable to load Image/Scene2D_Exit.tga" << endl;
+	//	cout << "Unable to load Image/Scene2D_MetalTile.tga" << endl;
 	//	return false;
 	//}
 	//else
 	//{
 	//	// Store the texture ID into MapOfTextureIDs
-	//	MapOfTextureIDs.insert(pair<int, int>(101, iTextureID));
+	//	MapOfTextureIDs.insert(pair<int, int>(201, iTextureID));
 	//}
 
 	return true;

@@ -1,5 +1,5 @@
 /**
- CToodee
+ CTopdee
  @brief A class representing the player object
  By: Toh Da Jun
  Date: Mar 2020
@@ -48,9 +48,9 @@
 // Include InventoryManager
 #include "InventoryManager.h"
 
-class CPlayer2D : public CSingletonTemplate<CPlayer2D>, public CEntity2D
+class CTopdee : public CSingletonTemplate<CTopdee>, public CEntity2D
 {
-	friend CSingletonTemplate<CPlayer2D>;
+	friend CSingletonTemplate<CTopdee>;
 public:
 
 	// Init
@@ -72,7 +72,7 @@ public:
 	void PostRender(void);
 
 	// save character state
-	struct ToodeeState {
+	struct TopdeeState {
 		// Physics
 		glm::vec2 position;
 		glm::vec2 velocity;
@@ -85,15 +85,15 @@ public:
 		//bool isFacingRight;
 	};
 
-	ToodeeState SaveState() const;
-	void LoadState(const ToodeeState& state);
+	TopdeeState SaveState() const;
+	void LoadState(const TopdeeState& state);
 
 protected:
 	// Constructor
-	CPlayer2D(void);
+	CTopdee(void);
 
 	// Destructor
-	virtual ~CPlayer2D(void);
+	virtual ~CTopdee(void);
 
 	// Let player interact with the map
 	void InteractWithMap(void);

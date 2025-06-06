@@ -18,7 +18,7 @@ using namespace std;
  */
 CScene2D::CScene2D(void)
 	: pMap2D(NULL)
-	, pPlayer2D(NULL)
+	, pCharacterManager(NULL)
 	, pKeyboardController(NULL)
 	, pMouseController(NULL)
 	, pProjectileManager2D(NULL)
@@ -44,10 +44,10 @@ CScene2D::~CScene2D(void)
 		pKeyboardController = NULL;
 	}
 
-	if (pPlayer2D)
+	if (pCharacterManager)
 	{
-		pPlayer2D->Destroy();
-		pPlayer2D = NULL;
+		pCharacterManager->Destroy();
+		pCharacterManager = NULL;
 	}
 
 	if (pMap2D)
@@ -107,14 +107,9 @@ bool CScene2D::Init(void)
 		return false;
 	}
 
-	// Create and initialise the CPlayer2D
-	pPlayer2D = CPlayer2D::GetInstance();
-	// Pass shader to pPlayer2D
-	pPlayer2D->SetShader("Shader2D");
-	// Initialise the instance
-	if (pPlayer2D->Init() == false)
-	{
-		cout << "Failed to load CPlayer2D" << endl;
+	pCharacterManager = CharacterManager::GetInstance();
+	if (!pCharacterManager->Init("Shader2D")) {
+		cout << "Failed to load characters" << endl;
 		return false;
 	}
 
@@ -149,7 +144,7 @@ bool CScene2D::Init(void)
 bool CScene2D::Update(const double dElapsedTime)
 {
 	// Call the pPlayer2D's update method before Map2D as we want to capture the inputs before map2D update
-	pPlayer2D->Update(dElapsedTime);
+	pCharacterManager->UpdateCurrentCharacter(dElapsedTime);
 
 	// Call the Map2D's update method
 	pMap2D->Update(dElapsedTime);
@@ -181,7 +176,7 @@ bool CScene2D::Update(const double dElapsedTime)
 	if (pGameManager->bLevelCompleted == true)
 	{
 		pMap2D->SetCurrentLevel(pMap2D->GetCurrentLevel() + 1);
-		pPlayer2D->Reset();
+		pCharacterManager->ResetAllCharacters();
 		pGameManager->bLevelCompleted = false;
 	}
 
@@ -193,7 +188,7 @@ bool CScene2D::Update(const double dElapsedTime)
 	// Check if the game should be ended
 	else if (pGameManager->bPlayerLost == true)
 	{
-		pPlayer2D->SetStatus(false);
+		pCharacterManager->DeactivateAllCharacters();;
 		return false; // closes the app
 	}
 
@@ -228,12 +223,7 @@ void CScene2D::Render(void)
 	// Call the Map2D's PostRender()
 	pMap2D->PostRender();
 
-	// Call the CPlayer2D's PreRender()
-	pPlayer2D->PreRender();
-	// Call the CPlayer2D's Render()
-	pPlayer2D->Render();
-	// Call the CPlayer2D's PostRender()
-	pPlayer2D->PostRender();
+	pCharacterManager->Render();
 
 	// Call the pProjectileManager2D's PreRender()
 	pProjectileManager2D->PreRender();

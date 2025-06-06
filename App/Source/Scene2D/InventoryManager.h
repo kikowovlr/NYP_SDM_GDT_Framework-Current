@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include "InventoryItem.h"
+#include <unordered_map>
 
 class CInventoryManager : public CSingletonTemplate<CInventoryManager>
 {
@@ -35,6 +36,11 @@ public:
 	// Get the number of items
 	int GetNumItems(void) const;
 
+	// Bind inventory to character
+	void BindToCharacter(CEntity2D* character);
+
+
+
 protected:
 	// Constructor
 	CInventoryManager(void);
@@ -44,4 +50,7 @@ protected:
 
 	// The map containing all the items
 	std::map<std::string, CInventoryItem*> inventoryMap;
+
+	std::unordered_map<CEntity2D*, std::map<std::string, CInventoryItem*>> characterInventories;
+	CEntity2D* activeCharacter = nullptr;
 };
