@@ -12,6 +12,8 @@
 #include <map>
 #include <string>
 #include "InventoryItem.h"
+#include "InventoryManager.h"
+#include "CharacterManager.h"
 
 class CGameManager : public CSingletonTemplate<CGameManager>
 {
@@ -32,6 +34,8 @@ public:
 	// Boolean flag to indicate if the game is be restarted
 	bool bGameToRestart;
 
+	// update player lives & health
+	void UpdatePlayerState();
 
 protected:
 	// Constructor
@@ -39,4 +43,6 @@ protected:
 
 	// Destructor
 	virtual ~CGameManager(void);
+
+	
 };

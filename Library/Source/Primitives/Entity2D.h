@@ -65,6 +65,10 @@ public:
 	// The vec2 which stores the position of an Entity2D in the Map2D
 	glm::vec2 vec2Position;
 
+	glm::vec2 vec2StartPosition;
+
+	virtual void Respawn();
+
 protected:
 	// Name of Shader Program instance
 	std::string sShaderName;

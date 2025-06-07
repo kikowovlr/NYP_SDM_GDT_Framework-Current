@@ -27,6 +27,7 @@ CEntity2D::CEntity2D(void)
 	, p2DMesh(NULL)
 	, vec4ColourTint(glm::vec4(1.0, 1.0, 1.0, 1.0))
 	, vec2Position(glm::vec2(0.0f))
+	, vec2StartPosition(glm::vec2(0.0f))
 {
 	// Initialise vec2Position
 	vec2Position = glm::vec2(0.0f);
@@ -199,4 +200,10 @@ void CEntity2D::PostRender(void)
 {
 	// Disable blending
 	glDisable(GL_BLEND);
+}
+
+void CEntity2D::Respawn()
+{
+	vec2Position = vec2StartPosition;
+	std::cout << "WARNING: Base Respawn() called!\n";
 }

@@ -127,6 +127,8 @@ bool CGUI_Scene2D::Update(const double dElapsedTime)
 								CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) * 0.03f));
 	ImGui::SetWindowSize(ImVec2(100.0f * relativeScale_x, 25.0f * relativeScale_y));
 	ImGui::SetWindowFontScale(1.5f * relativeScale_y);
+	// set to global inventory
+	pInventoryManager->BindToCharacter(nullptr);
 	pInventoryItem = pInventoryManager->GetItem("Health");
 	ImGui::Image((void*)(intptr_t)pInventoryItem->GetTextureID(),
 		ImVec2(pInventoryItem->vec2Size.x * relativeScale_x, pInventoryItem->vec2Size.y * relativeScale_y),

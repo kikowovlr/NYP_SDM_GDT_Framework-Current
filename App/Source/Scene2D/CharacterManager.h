@@ -42,6 +42,9 @@ public:
 
 	void DeactivateAllCharacters();
 
+	CEntity2D* GetTopdee();
+	CEntity2D* GetToodee();
+
 private:
 	CEntity2D* activeCharacter;
 	CTopdee* topdee;

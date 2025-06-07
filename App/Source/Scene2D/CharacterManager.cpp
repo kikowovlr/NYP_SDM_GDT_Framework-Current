@@ -100,3 +100,13 @@ void CharacterManager::DeactivateAllCharacters() {
     topdee->SetStatus(false);
     toodee->SetStatus(false);
 }
+
+CEntity2D* CharacterManager::GetTopdee()
+{
+    return topdee;
+}
+
+CEntity2D* CharacterManager::GetToodee()
+{
+    return toodee;
+}

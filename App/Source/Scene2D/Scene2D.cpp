@@ -133,6 +133,9 @@ bool CScene2D::Init(void)
 	pGameManager = CGameManager::GetInstance();
 	pGameManager->Init();
 
+	// Debug inventories
+	CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
+
 	return true;
 }
 

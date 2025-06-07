@@ -86,5 +86,7 @@ protected:
 	CGUI_Scene2D* pGUI_Scene2D;
 
 	CGameManager* pGameManager;
+
+
 };
 

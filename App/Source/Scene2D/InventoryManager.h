@@ -39,8 +39,7 @@ public:
 	// Bind inventory to character
 	void BindToCharacter(CEntity2D* character);
 
-
-
+	void DebugPrintAllInventories(CEntity2D* topdee = nullptr, CEntity2D* toodee = nullptr) const;
 protected:
 	// Constructor
 	CInventoryManager(void);
@@ -53,4 +52,7 @@ protected:
 
 	std::unordered_map<CEntity2D*, std::map<std::string, CInventoryItem*>> characterInventories;
 	CEntity2D* activeCharacter = nullptr;
+	
+private:
+	void DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const;
 };

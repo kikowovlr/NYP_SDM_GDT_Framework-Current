@@ -100,7 +100,7 @@ bool CTopdee::Init(void)
 	// Set the start position of the Player to iRow and iCol
 	vec2Position = glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
 		uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y);
-	playerStartPos = vec2Position;
+	vec2StartPosition = vec2Position;
 	vec2MovementVelocity = glm::vec2(1, 1);
 
 	// Set up the projection matrix
@@ -153,18 +153,8 @@ bool CTopdee::Init(void)
 
 	// Get the handler to the CInventoryManager instance
 	pInventoryManager = CInventoryManager::GetInstance();
-	// Add a Lives icon as one of the inventory items
-	pInventoryItem = pInventoryManager->Add("Lives", "Image/Scene2D_Lives.tga", 3, 3);
-	pInventoryItem->vec2Size = glm::vec2(25, 25);
-
-	// Add a Health icon as one of the inventory items
-	pInventoryItem = pInventoryManager->Add("Health", "Image/Scene2D_Health.tga", 100, 100);
-	pInventoryItem->vec2Size = glm::vec2(25, 25);
-
-	// This set of codes should be removed once CGUI_Scene2D has been added.
-	// Add a Tree as one of the inventory items
-	pInventoryItem = pInventoryManager->Add("Tree", "Image/Scene2D_TreeTile.tga", 5, 0);
-	pInventoryItem->vec2Size = glm::vec2(25, 25);
+	// Bind to topdee invetory
+	pInventoryManager->BindToCharacter(this);
 
 	// Set the Physics to fall status by default
 	cPhysics2D.Init();
@@ -446,9 +436,6 @@ bool CTopdee::Update(const double dElapsedTime)
 	// Interact with the Map
 	InteractWithMap();
 
-	// Update the Health and Lives
-	UpdateHealthLives();
-
 	//CS: Update the animated sprite
 	pAnimatedSprites->Update(dElapsedTime);
 
@@ -532,6 +519,11 @@ void CTopdee::LoadState(const TopdeeState& state)
 	vec4ColourTint = state.colourTint;
 }
 
+void CTopdee::Respawn()
+{
+	vec2Position = vec2StartPosition;
+}
+
 /**
  @brief Let player interact with the map. You can add collectibles such as powerups and health here.
  Decides whether smth gets destroyed after player passes it or not
@@ -579,34 +571,5 @@ void CTopdee::InteractWithMap(void)
 		break;
 	default:
 		break;
-	}
-}
-
-/**
- @brief Update the health and lives.
- */
-void CTopdee::UpdateHealthLives(void)
-{
-	// Update health and lives
-	pInventoryItem = pInventoryManager->GetItem("Health");
-	// If health is less than or equal to 0, then reduce the lives by 1
-	if (pInventoryItem->GetCount() <= 0)
-	{
-		// Reset the Health to max value
-		pInventoryItem->iItemCount = pInventoryItem->GetMaxCount();
-		// But we reduce the lives by 1.
-		pInventoryItem = pInventoryManager->GetItem("Lives");
-		pInventoryItem->Remove(1);
-
-		// if no health -> respawn player
-		vec2Position = playerStartPos;
-
-		// Check if there is no lives left...
-		if (pInventoryItem->GetCount() <= 0)
-		{
-			// Player loses the game
-			CGameManager::GetInstance()->bPlayerLost = true;
-			
-		}
 	}
 }

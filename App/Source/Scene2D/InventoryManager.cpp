@@ -7,6 +7,7 @@
 
 #include "InventoryManager.h"
 #include <stdexcept>      // std::invalid_argument
+#include <iostream>
 
 /**
 @brief Constructor
@@ -221,3 +222,38 @@ void CInventoryManager::BindToCharacter(CEntity2D* character)
 	}
 }
 
+void CInventoryManager::DebugPrintAllInventories(CEntity2D* topdee, CEntity2D* toodee) const
+{
+	std::cout << "\n=== INVENTORY DEBUG REPORT ===" << std::endl;
+
+	// Global Inventory
+	std::cout << "[GLOBAL INVENTORY]" << std::endl;
+	for (const auto& entry : inventoryMap) {  // 'entry' instead of 'name, item'
+		const std::string& itemName = entry.first;          // Key (string)
+		CInventoryItem* pItem = entry.second;               // Value (CInventoryItem*)
+		std::cout << "- " << itemName << ": "
+			<< pItem->iItemCount << "/" << pItem->iItemMaxCount << std::endl;
+	}
+
+	// Character Inventories
+	DebugPrintCharacterInventory(topdee, "TOPDEE");
+	DebugPrintCharacterInventory(toodee, "TOODEE");
+}
+
+
+void CInventoryManager::DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const
+{
+	auto charIt = characterInventories.find(character);
+	if (charIt != characterInventories.end()) {
+		std::cout << "[" << charName << " INVENTORY]" << std::endl;
+		for (const auto& entry : charIt->second) {  // charIt->second = character's item map
+			const std::string& itemName = entry.first;
+			CInventoryItem* pItem = entry.second;
+			std::cout << "- " << itemName << ": "
+				<< pItem->iItemCount << "/" << pItem->iItemMaxCount << std::endl;
+		}
+	}
+	else {
+		std::cout << "[" << charName << " INVENTORY] (Empty)" << std::endl;
+	}
+}
