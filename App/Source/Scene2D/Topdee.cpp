@@ -317,23 +317,6 @@ bool CTopdee::Update(const double dElapsedTime)
 	// Update the vec2Position with the new position
 	vec2Position = vec2NewPosition;
 
-	//// shooting mechanic
-	//if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
-	//{
-	//	glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
-	//		CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
-	//		pMouseController->GetMousePositionY() - vec2Position.y));
-	//	// Activate a CProjectil2D
-	//	pProjectileManager2D->Activate(vec2Position,
-	//		temp, 2.0, 200.0f, this);
-
-	//	cShootStatus.SetToCannotShoot();
-	//}
-	//else
-	//{
-	//	cShootStatus.Update(dElapsedTime);
-	//}
-
 	// Constraint the player within the map
 	if (pMap2D->Constraint(vec2Position) == true)
 	{
@@ -376,7 +359,7 @@ void CTopdee::Render(void)
 {
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
-
+	
 	//model = glm::translate(model, glm::vec3(0.5f * pSettings->TILE_WIDTH, 0.5f * pSettings->TILE_HEIGHT, 0.0f));
 	//model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f));
 	//model = glm::translate(model, glm::vec3(-0.5f * pSettings->TILE_WIDTH, -0.5f * pSettings->TILE_HEIGHT, 0.0f));
@@ -486,5 +469,23 @@ void CTopdee::InteractWithMap(void)
 		break;
 	default:
 		break;
+	}
+}
+
+void CTopdee::InteractWithDoors()
+{
+	int iPositionX = 0;
+	int iPositionY = 0;
+	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
+		return;
+
+	// Check if player is standing on the entrance door (not exit) and pressed 'E'
+	if (pMap2D->IsEntranceDoor(iPositionX, iPositionY) && pKeyboardController->IsKeyPressed(GLFW_KEY_E)) {
+		pMap2D->SetAreDoorsUsed(true);
+		// Teleport to exit door
+		glm::ivec2 exitPos = pMap2D->GetExitDoorPos();
+		vec2Position = glm::vec2((exitPos.x + 0.5f) * 25.f, (exitPos.y + 0.5f) * 25.f); // Center player
+
+		cout << "topdee pos: " << vec2Position.x << ", " << vec2Position.y << endl;
 	}
 }

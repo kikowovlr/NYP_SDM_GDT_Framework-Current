@@ -117,37 +117,23 @@ bool CPlayer2D::Init(void)
 
 	// Teacher texture
 	// Load the player texture 
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_player.png", true);
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/toodee.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/scene2d_player.png" << endl;
+		cout << "Unable to load Image/toodee.png" << endl;
 		return false;
 	}
 
-	////CS: Create the Quad Mesh using the mesh builder
-	//p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
-
 	//CS: Create the animated sprite and setup the animation 
-	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	pAnimatedSprites->AddAnimation("idle", 0, 2);
-	pAnimatedSprites->AddAnimation("right", 3, 5);
-	pAnimatedSprites->AddAnimation("left", 6, 8);
+	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(6, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	pAnimatedSprites->AddAnimation("idle-right", 0, 2);
+	pAnimatedSprites->AddAnimation("idle-left", 3, 5);
+	pAnimatedSprites->AddAnimation("walk-right", 6, 8);
+	pAnimatedSprites->AddAnimation("walk-left", 9, 11);
+	pAnimatedSprites->AddAnimation("jump-right", 12, 14);
+	pAnimatedSprites->AddAnimation("jump-left", 15, 17);
 	//CS: Play the "idle" animation as default
-	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
-
-	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
-	//if (iTextureID == 0)
-	//{
-	//	cout << "Unable to load Image/SpriteBunny.png" << endl;
-	//	return false;
-	//}
-
-	////CS: Create the animated sprite and setup the animation 
-	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	//pAnimatedSprites->AddAnimation("right", 0, 2);
-	//pAnimatedSprites->AddAnimation("left", 3, 5);
-	//// default anim is right
-	//pAnimatedSprites->PlayAnimation("right", -1, 2.f);
+	pAnimatedSprites->PlayAnimation("idle-right", -1, 1.0f);
 	 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -158,22 +144,12 @@ bool CPlayer2D::Init(void)
 	// Bind to toodee inventory
 	pInventoryManager->BindToCharacter(this);
 
-	// This set of codes should be removed once CGUI_Scene2D has been added.
-	// Add a Tree as one of the inventory items
-	//pInventoryItem = pInventoryManager->Add("Tree", "Image/Scene2D_TreeTile.tga", 5, 0);
-	//pInventoryItem->vec2Size = glm::vec2(25, 25);
-	
-	//// Add a Lives icon as one of the inventory items
-	//pInventoryItem = pInventoryManager->Add("Lives", "Image/Scene2D_Lives.tga", 3, 3);
-	//pInventoryItem->vec2Size = glm::vec2(25, 25);
-
-	//// Add a Health icon as one of the inventory items
-	//pInventoryItem = pInventoryManager->Add("Health", "Image/Scene2D_Health.tga", 100, 100);
-	//pInventoryItem->vec2Size = glm::vec2(25, 25);
-
 	pInventoryItem = pInventoryManager->Add("Laser Gun", "Image/laser-gun.png",1, 0);
 	pInventoryItem->vec2Size = glm::vec2(25, 25);
 
+	pInventoryItem = pInventoryManager->Add("Energy", "Image/energy.png", 50, 0);
+	pInventoryItem->vec2Size = glm::vec2(25, 25);
+	
 	// Set the Physics to fall status by default
 	cPhysics2D.Init();
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
@@ -204,7 +180,7 @@ bool CPlayer2D::Reset()
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
 
 	//CS: Play the "idle" animation as default
-	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
+	pAnimatedSprites->PlayAnimation("idle-right", -1, 1.0f);
 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -219,6 +195,9 @@ bool CPlayer2D::Reset()
  */
 bool CPlayer2D::Update(const double dElapsedTime)
 {
+	if (pKeyboardController->IsKeyPressed(GLFW_KEY_L))
+		cout << "player pos: " << vec2Position.x/25.0f - 0.5f << ", " << vec2Position.y/25.0f - 0.5f << endl;
+
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
 	// Set the physics horizontal status to idle
@@ -248,25 +227,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 			if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::IDLE)
 				cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::WALK);
 		}
-
-		//// Up-down movement
-		//if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
-		//	(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
-		//{
-		//	vec2MovementVelocity.y = 0.0f;
-		//}
-		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
-		//{
-		//	vec2MovementVelocity.y += vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
-		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		//}
-		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
-		//{
-		//	vec2MovementVelocity.y -= vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
-		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		//}
 	}
 	else {
 		// Left-right movement
@@ -287,25 +247,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 			if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::IDLE)
 				cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::WALK);
 		}
-
-		//// Up-down movement
-		//if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
-		//	(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
-		//{
-		//	vec2MovementVelocity.y = 0.0f;
-		//}
-		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
-		//{
-		//	vec2MovementVelocity.y += vec2WalkSpeed.y;
-		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		//}
-		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
-		//{
-		//	vec2MovementVelocity.y -= vec2WalkSpeed.y;
-		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		//}
 	}
 
 	// Jump movement
@@ -347,10 +288,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		}
 	}
 
-	if ((pKeyboardController->IsKeyDown(GLFW_KEY_A)) /*&& (pKeyboardController->IsKeyDown(GLFW_KEY_SPACE))*/)
-	{
-		if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::WALK);
-	}
 	// Update vec2Position
 	glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
 	// For calculating the collision point's x-coordinate
@@ -409,20 +346,28 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	vec2Position = vec2NewPosition;
 
 	// shooting mechanic
-	if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
+	if (isGunPicked)
 	{
-		glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
-			CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
-			pMouseController->GetMousePositionY() - vec2Position.y));
-		// Activate a CProjectil2D
-		pProjectileManager2D->Activate(vec2Position,
-			temp, 2.0, 200.0f, this);
+		if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
+		{
+			glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
+				CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
+				pMouseController->GetMousePositionY() - vec2Position.y));
+			// Activate a CProjectil2D
+			pProjectileManager2D->Activate(vec2Position,
+				temp, 2.0, 200.0f, this);
 
-		cShootStatus.SetToCannotShoot();
-	}
-	else
-	{
-		cShootStatus.Update(dElapsedTime);
+			// remove energy from inventory every time a bullet is shot
+			pInventoryManager->BindToCharacter(this);
+			pInventoryItem = pInventoryManager->GetItem("Energy");
+			pInventoryItem->Remove(10);
+
+			cShootStatus.SetToCannotShoot();
+		}
+		else
+		{
+			cShootStatus.Update(dElapsedTime);
+		}
 	}
 
 	// Constraint the player within the map
@@ -440,14 +385,42 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		{
 			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
 		}
-		//else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-		//{
-		//	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//}
 	}
 
 	// Interact with the Map
 	InteractWithMap();
+
+	// Update facing direction based on horizontal velocity
+	if (vec2MovementVelocity.x < -0.01f)
+		eFacingDirection = FacingDirection::LEFT;
+	else if (vec2MovementVelocity.x > 0.01f)
+		eFacingDirection = FacingDirection::RIGHT;
+
+	// Animation
+	// JUMP or DOUBLE JUMP
+	if (cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
+	{
+		if (eFacingDirection == FacingDirection::LEFT)
+			pAnimatedSprites->PlayAnimation("jump-left", 0, 1.0f);
+		else
+			pAnimatedSprites->PlayAnimation("jump-right", 0, 1.0f);
+	}
+	// WALKING
+	else if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::WALK)
+	{
+		if (eFacingDirection == FacingDirection::LEFT)
+			pAnimatedSprites->PlayAnimation("walk-left", -1, 1.0f);
+		else
+			pAnimatedSprites->PlayAnimation("walk-right", -1, 1.0f);
+	}
+	// IDLE
+	else
+	{
+		if (eFacingDirection == FacingDirection::LEFT)
+			pAnimatedSprites->PlayAnimation("idle-left", -1, 1.0f);
+		else
+			pAnimatedSprites->PlayAnimation("idle-right", -1, 1.0f);
+	}
 
 	//CS: Update the animated sprite
 	pAnimatedSprites->Update(dElapsedTime);
@@ -559,16 +532,15 @@ void CPlayer2D::InteractWithMap(void)
 		pInventoryItem = pInventoryManager->GetItem("Lives");
 		pInventoryItem->Add(1);
 		break;
-	case 20:
+	case 20: // spike
 		// Decrease the health by 1
 		pInventoryItem = pInventoryManager->GetItem("Health");
 		pInventoryItem->Remove(1);
-		cout << "Health: " << pInventoryItem->GetCount() << endl;
 		break;
 	case 21: // health pack
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the health
-		pInventoryItem = pInventoryManager->GetItem("Health Pack");
+		pInventoryItem = pInventoryManager->GetItem("Health");
 		pInventoryItem->Add(20);
 		break;
 	case 22: // laser gun
@@ -577,8 +549,16 @@ void CPlayer2D::InteractWithMap(void)
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		pInventoryItem = pInventoryManager->GetItem("Laser Gun");
 		pInventoryItem->Add(1);
+		pInventoryItem = pInventoryManager->GetItem("Energy");
+		pInventoryItem->Add(50);
 		isGunPicked = true;
 		break;
+	case 25:// energy can
+		pInventoryManager->BindToCharacter(this);
+		// Erase the can from this position
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+		pInventoryItem = pInventoryManager->GetItem("Energy");
+		pInventoryItem->Add(25);
 	case 99:
 		// Level has been completed
 		pInventoryItem = pInventoryManager->GetItem("Tree");

@@ -133,8 +133,10 @@ bool CScene2D::Init(void)
 	pGameManager = CGameManager::GetInstance();
 	pGameManager->Init();
 
-	//// Debug inventories
-	//CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
+	pMap2D->SetDoorPositions(
+		glm::ivec2(6, 6),  // Entrance door pos
+		glm::ivec2(12, 6)   // Exit door pos
+	);
 
 	return true;
 }
@@ -146,9 +148,10 @@ bool CScene2D::Init(void)
  */
 bool CScene2D::Update(const double dElapsedTime)
 {
-	//debug
+	// debug
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_P))
 		CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
+
 	// Switch character the moment TAB is pressed
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_TAB))
 		pCharacterManager->SwitchCharacter();
@@ -158,6 +161,17 @@ bool CScene2D::Update(const double dElapsedTime)
 
 	// Call the Map2D's update method
 	pMap2D->Update(dElapsedTime);
+
+	// check if doors are unlocked or not
+	if (pMap2D->AreDoorsUnlocked())
+	{
+		CEntity2D* pEntity = pCharacterManager->GetTopdee();
+		CTopdee* pTopdee = dynamic_cast<CTopdee*>(pEntity); // safe downcast
+
+		// only topdee can interact with door
+		if (pTopdee)
+			pTopdee->InteractWithDoors();
+	}
 
 	// Call the pProjectileManager2D's update method
 	pProjectileManager2D->Update(dElapsedTime);

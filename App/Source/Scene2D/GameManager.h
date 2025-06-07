@@ -44,5 +44,4 @@ protected:
 	// Destructor
 	virtual ~CGameManager(void);
 
-	
 };

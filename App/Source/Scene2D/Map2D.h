@@ -1,4 +1,4 @@
-/**
+﻿/**
  Map2D
  @brief A class which manages the map in the game
  By: Toh Da Jun
@@ -145,6 +145,28 @@ public:
 		float& fCollisionCoordX,
 		const bool bApplyTolerance = true);
 
+	// schedule a block reset
+	void ScheduleBlockReset(int x, int y);
+	// update timed blocks 
+	void UpdateTimedBlocks(float deltaTime);
+
+	void ActivatePort(int x, int y);
+
+	// Deactivate a specific port by position
+	void DeactivatePort(int x, int y);
+
+	// Deactivate ALL ports (e.g., when leaving a level)
+	void DeactivateAllPorts();
+
+	void LockDoors();
+	void UnlockDoors();
+	bool AreDoorsUnlocked();
+	void SetAreDoorsUsed(bool _areDoorsUsed);
+
+	void SetDoorPositions(glm::ivec2 entrance, glm::ivec2 exit);
+	bool IsEntranceDoor(int x, int y) const;
+	glm::ivec2 GetExitDoorPos() const;
+
 protected:
 	// The variable containing the rapidcsv::Document
 	// We will load the CSV file's content into this Document
@@ -183,5 +205,23 @@ protected:
 
 	// Render a tile
 	void RenderTile(const unsigned int uiRow, const unsigned int uiCol);
+
+	// port logic
+	struct BlockReset {
+		int x, y;           // Block position
+		float timeLeft;      // Countdown timer
+	};
+	std::vector<BlockReset> blocksToReset;  // Tracks all blocks waiting to reset
+	float resetDelay = 10.0f; // Time until reset (seconds)
+
+	// Door open logic
+	std::vector<std::pair<int, int>> activePorts; // Active port positions
+	int requiredActivePorts = 2;
+	int unlockedDoorTileID = 24;                    // Tile ID for open door
+	int lockedDoorTileID = 23;                      // Tile ID for locked door
+	glm::ivec2 entranceDoorPos;  // Entrance door (x,y)
+	glm::ivec2 exitDoorPos;      // Exit door (x,y)
+	bool areDoorsUnlocked = false;
+	bool areDoorsUsed = false;
 };
 

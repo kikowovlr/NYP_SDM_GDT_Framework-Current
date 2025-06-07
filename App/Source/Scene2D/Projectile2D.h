@@ -21,6 +21,7 @@ class CProjectile2D : public CEntity2D
 public:
 	// Default Constructor
 	CProjectile2D(void);
+
 	// Destructor
 	virtual ~CProjectile2D(void);
 

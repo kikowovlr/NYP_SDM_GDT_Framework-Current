@@ -100,9 +100,6 @@ protected:
 	// Let player interact with the map
 	void InteractWithMap(void);
 
-	//// Update health and lives of player
-	//void UpdateHealthLives(void);
-
 	// Constant variable for jump speed
 	const glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 300.0f);
 	// Constant variable for walk speed
@@ -141,5 +138,13 @@ protected:
 	CInventoryItem* pInventoryItem;
 
 	bool isGunPicked;
+
+	enum class FacingDirection
+	{
+		LEFT,
+		RIGHT
+	};
+
+	FacingDirection eFacingDirection = FacingDirection::RIGHT;
 };
 

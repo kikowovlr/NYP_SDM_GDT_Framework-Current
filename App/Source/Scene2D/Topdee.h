@@ -90,6 +90,8 @@ public:
 
 	void Respawn() override;
 
+	void InteractWithDoors();
+
 protected:
 	// Constructor
 	CTopdee(void);

@@ -1,4 +1,4 @@
-/**
+﻿/**
  Map2D
  @brief A class which manages the map in the game
  By: Toh Da Jun
@@ -172,7 +172,6 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		MapOfTextureIDs.insert(pair<int, int>(104, iTextureID));
 	}
 
-
 	// COLLECTABLES
 	// Load the Spa texture
 	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/health-pack.png", true);
@@ -197,6 +196,42 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 	{
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(22, iTextureID));
+	}
+	// closed door
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/closed-door.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/closed-door.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(23, iTextureID));
+	}
+	// opened door
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/opened-door.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/opened-door.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(24, iTextureID));
+	}
+	// opened door
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/energy-can.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/energy-can.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(25, iTextureID));
 	}
 
 	// Load the tree texture
@@ -259,6 +294,7 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 */
 bool CMap2D::Update(const double dElapsedTime)
 {
+	UpdateTimedBlocks(dElapsedTime);
 	return true;
 }
 
@@ -632,6 +668,8 @@ void CMap2D::RenderTile(const unsigned int uiRow, const unsigned int uiCol)
 	if (arrMapInfo[uiCurLevel][uiRow][uiCol].value != 0)
 	{
 		//if (arrMapInfo[uiCurLevel][uiRow][uiCol].value < 3)
+		if (arrMapInfo[uiCurLevel][uiRow][uiCol].value == 105)
+			cout << "wait" << endl;
 		glBindTexture(GL_TEXTURE_2D, MapOfTextureIDs.at(arrMapInfo[uiCurLevel][uiRow][uiCol].value));
 			//CS: Render the tile
 			pQuadMesh->Render();
@@ -929,4 +967,124 @@ CSettings::RESULTS CMap2D::CheckHorizontalCollision(glm::vec2 vec2StartPosition,
 	}
 
 	return CSettings::RESULTS::NEGATIVE;
+}
+
+void CMap2D::ScheduleBlockReset(int x, int y)
+{
+	// Check if block is already in the vector
+	for (auto& block : blocksToReset) {
+		if (block.x == x && block.y == y) {
+			return; // if same block, dont add but return
+		}
+	}
+	// If new block, add it
+	blocksToReset.push_back({ x, y, resetDelay });
+}
+
+void CMap2D::UpdateTimedBlocks(float deltaTime)
+{
+	if (areDoorsUsed)
+		return; // dont reset blocks anymore if player has used the doors
+
+	for (size_t i = 0; i < blocksToReset.size(); ) {
+		blocksToReset[i].timeLeft -= deltaTime;
+
+		if (blocksToReset[i].timeLeft <= 0) {
+			// Reset the block (104 → 103)
+			SetMapInfo(blocksToReset[i].y, blocksToReset[i].x, 103);
+			DeactivatePort(blocksToReset[i].x, blocksToReset[i].y);
+
+			// Remove from vector (swap with last element + pop_back)
+			blocksToReset[i] = blocksToReset.back();
+			blocksToReset.pop_back();
+		}
+		else {
+			i++;
+		}
+	}
+}
+
+void CMap2D::ActivatePort(int x, int y)
+{
+	// Ignore if port is already active
+	for (auto& port : activePorts) {
+		if (port.first == x && port.second == y) return;
+	}
+
+	activePorts.emplace_back(x, y);
+
+	// When enough ports are activated
+	if (activePorts.size() >= requiredActivePorts) {
+		UnlockDoors(); // Changes sprites to unlocked
+	}
+}
+
+void CMap2D::DeactivatePort(int x, int y)
+{
+	if (areDoorsUsed) return; // prevent door from re-locking after player has used them
+
+	// Find and remove the port from activePorts
+	auto it = std::remove_if(
+		activePorts.begin(),
+		activePorts.end(),
+		[x, y](const std::pair<int, int>& port) {
+			return port.first == x && port.second == y;
+		}
+	);
+
+	if (it != activePorts.end()) {
+		activePorts.erase(it, activePorts.end());
+	}
+
+	// When ports are deactivated
+	if (activePorts.size() < requiredActivePorts && AreDoorsUnlocked()) {
+		LockDoors(); // Reverts sprites to locked
+	}
+}
+
+void CMap2D::DeactivateAllPorts()
+{
+	activePorts.clear();
+}
+
+void CMap2D::LockDoors()
+{
+	if (!areDoorsUnlocked) return; // Already unlocked
+	SetMapInfo(entranceDoorPos.y, entranceDoorPos.x, lockedDoorTileID);
+	SetMapInfo(exitDoorPos.y, exitDoorPos.x, lockedDoorTileID);
+	areDoorsUnlocked = false;
+}
+
+void CMap2D::UnlockDoors()
+{
+	if (areDoorsUnlocked) return; // Already unlocked
+	SetMapInfo(entranceDoorPos.y, entranceDoorPos.x, unlockedDoorTileID);
+	SetMapInfo(exitDoorPos.y, exitDoorPos.x, unlockedDoorTileID);
+	areDoorsUnlocked = true;
+}
+
+bool CMap2D::AreDoorsUnlocked()
+{
+	return areDoorsUnlocked;
+}
+
+void CMap2D::SetAreDoorsUsed(bool _areDoorsUsed)
+{
+	areDoorsUsed = _areDoorsUsed;
+}
+
+void CMap2D::SetDoorPositions(glm::ivec2 entrance, glm::ivec2 exit)
+{
+	entranceDoorPos = entrance;
+	exitDoorPos = exit;
+}
+
+bool CMap2D::IsEntranceDoor(int x, int y) const
+{
+	return x == entranceDoorPos.x && y == entranceDoorPos.y;
+}
+
+glm::ivec2 CMap2D::GetExitDoorPos() const
+{
+	return exitDoorPos;
 }

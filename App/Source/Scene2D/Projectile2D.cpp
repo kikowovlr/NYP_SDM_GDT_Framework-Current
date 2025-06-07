@@ -195,6 +195,8 @@ bool CProjectile2D::Update(const double dElapsedTime)
 	// Update Position
 	vec2Position = vec2Position + vec2Direction * (float)dElapsedTime * fSpeed;
 
+	InteractWithPorts();
+
 	// For calculating the collision point's x-coordinate
 	float fCollisionCoordX = 0;
 	// For calculating the collision point's y-coordinate
@@ -216,8 +218,6 @@ bool CProjectile2D::Update(const double dElapsedTime)
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
 	model = glm::rotate(model, rotationAngle, glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 1.0f));
-
-	//InteractWithPorts()
 
 	return true;
 }
@@ -276,20 +276,21 @@ void CProjectile2D::CalculateRotation()
 	rotationAngle = atan2f(vec2Direction.y, vec2Direction.x);
 }
 
-//void CProjectile2D::InteractWithPorts()
-//{
-//	int iPositionX = 0;
-//	int iPositionY = 0;
-//	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
-//		return;
-//
-//	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
-//	{
-//	case 103:
-//		cout << "changing panel" << endl;
-//		pMap2D->SetMapInfo(iPositionY, iPositionX, 104);
-//		break;
-//	default:
-//		break;
-//	}
-//}
+void CProjectile2D::InteractWithPorts()
+{
+	int iPositionX = 0;
+	int iPositionY = 0;
+
+	// Calculate the tile in the direction the projectile was headed
+	glm::vec2 nextTilePos = vec2Position + glm::normalize(vec2Direction) * 1.0f; // 1.0f or tile size (25.0f)
+
+	if (pMap2D->GetTileIndexAtPosition(nextTilePos, iPositionX, iPositionY) == false)
+		return;
+
+	if (pMap2D->GetMapInfo(iPositionY, iPositionX) == 103)
+	{
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 104);
+		pMap2D->ActivatePort(iPositionX, iPositionY);
+		pMap2D->ScheduleBlockReset(iPositionX, iPositionY);
+	}
+}
