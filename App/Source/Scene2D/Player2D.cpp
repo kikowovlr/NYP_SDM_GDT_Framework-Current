@@ -31,6 +31,7 @@ CPlayer2D::CPlayer2D(void)
 	, pProjectileManager2D(NULL)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
+	, isGunPicked(false)
 {
 	// Initialise position of the player
 	vec2Position = glm::vec2(0);
@@ -84,6 +85,7 @@ bool CPlayer2D::Init(void)
 	}
 	// Reset the cShootStatus
 	cShootStatus.Reset();
+	cShootStatus.SetToCannotShoot();
 
 	// Get the handler to the CMap2D instance
 	pMap2D = CMap2D::GetInstance();
@@ -114,38 +116,38 @@ bool CPlayer2D::Init(void)
 	glBindVertexArray(VAO);
 
 	// Teacher texture
-	//// Load the player texture 
-	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_player.png", true);
-	//if (iTextureID == 0)
-	//{
-	//	cout << "Unable to load Image/scene2d_player.png" << endl;
-	//	return false;
-	//}
-
-	//////CS: Create the Quad Mesh using the mesh builder
-	////p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
-
-	////CS: Create the animated sprite and setup the animation 
-	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	//pAnimatedSprites->AddAnimation("idle", 0, 2);
-	//pAnimatedSprites->AddAnimation("right", 3, 5);
-	//pAnimatedSprites->AddAnimation("left", 6, 8);
-	////CS: Play the "idle" animation as default
-	//pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
-
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
+	// Load the player texture 
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_player.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/SpriteBunny.png" << endl;
+		cout << "Unable to load Image/scene2d_player.png" << endl;
 		return false;
 	}
 
+	////CS: Create the Quad Mesh using the mesh builder
+	//p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
+
 	//CS: Create the animated sprite and setup the animation 
-	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	pAnimatedSprites->AddAnimation("right", 0, 2);
-	pAnimatedSprites->AddAnimation("left", 3, 5);
-	// default anim is right
-	pAnimatedSprites->PlayAnimation("right", -1, 2.f);
+	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	pAnimatedSprites->AddAnimation("idle", 0, 2);
+	pAnimatedSprites->AddAnimation("right", 3, 5);
+	pAnimatedSprites->AddAnimation("left", 6, 8);
+	//CS: Play the "idle" animation as default
+	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
+
+	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
+	//if (iTextureID == 0)
+	//{
+	//	cout << "Unable to load Image/SpriteBunny.png" << endl;
+	//	return false;
+	//}
+
+	////CS: Create the animated sprite and setup the animation 
+	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	//pAnimatedSprites->AddAnimation("right", 0, 2);
+	//pAnimatedSprites->AddAnimation("left", 3, 5);
+	//// default anim is right
+	//pAnimatedSprites->PlayAnimation("right", -1, 2.f);
 	 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -169,7 +171,7 @@ bool CPlayer2D::Init(void)
 	//pInventoryItem = pInventoryManager->Add("Health", "Image/Scene2D_Health.tga", 100, 100);
 	//pInventoryItem->vec2Size = glm::vec2(25, 25);
 
-	pInventoryItem = pInventoryManager->Add("Spa", "Image/Scene2D_Spa.tga", 2, 1);
+	pInventoryItem = pInventoryManager->Add("Laser Gun", "Image/laser-gun.png",1, 0);
 	pInventoryItem->vec2Size = glm::vec2(25, 25);
 
 	// Set the Physics to fall status by default
@@ -247,24 +249,24 @@ bool CPlayer2D::Update(const double dElapsedTime)
 				cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::WALK);
 		}
 
-		// Up-down movement
-		if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
-			(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
-		{
-			vec2MovementVelocity.y = 0.0f;
-		}
-		else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
-		{
-			vec2MovementVelocity.y += vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		}
-		else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
-		{
-			vec2MovementVelocity.y -= vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		}
+		//// Up-down movement
+		//if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
+		//	(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
+		//{
+		//	vec2MovementVelocity.y = 0.0f;
+		//}
+		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
+		//{
+		//	vec2MovementVelocity.y += vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
+		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
+		//}
+		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
+		//{
+		//	vec2MovementVelocity.y -= vec2WalkSpeed.y * vec2WalkSpeedMultiplier.y;
+		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
+		//}
 	}
 	else {
 		// Left-right movement
@@ -286,24 +288,24 @@ bool CPlayer2D::Update(const double dElapsedTime)
 				cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::WALK);
 		}
 
-		// Up-down movement
-		if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
-			(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
-		{
-			vec2MovementVelocity.y = 0.0f;
-		}
-		else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
-		{
-			vec2MovementVelocity.y += vec2WalkSpeed.y;
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		}
-		else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
-		{
-			vec2MovementVelocity.y -= vec2WalkSpeed.y;
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
-		}
+		//// Up-down movement
+		//if ((pKeyboardController->IsKeyDown(GLFW_KEY_W)) &&
+		//	(pKeyboardController->IsKeyDown(GLFW_KEY_S)))
+		//{
+		//	vec2MovementVelocity.y = 0.0f;
+		//}
+		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
+		//{
+		//	vec2MovementVelocity.y += vec2WalkSpeed.y;
+		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
+		//}
+		//else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
+		//{
+		//	vec2MovementVelocity.y -= vec2WalkSpeed.y;
+		//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+		//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
+		//}
 	}
 
 	// Jump movement
@@ -363,12 +365,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordX) == CSettings::RESULTS::POSITIVE)
 		{
 			cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-			//cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
 		}
-		//if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-		//{
-		//	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//}
 			
 		if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
 		{
@@ -451,9 +448,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 
 	// Interact with the Map
 	InteractWithMap();
-
-	//// Update the Health and Lives
-	//UpdateHealthLives();
 
 	//CS: Update the animated sprite
 	pAnimatedSprites->Update(dElapsedTime);
@@ -571,10 +565,19 @@ void CPlayer2D::InteractWithMap(void)
 		pInventoryItem->Remove(1);
 		cout << "Health: " << pInventoryItem->GetCount() << endl;
 		break;
-	case 21:
+	case 21: // health pack
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the health
-		pInventoryItem = pInventoryManager->GetItem("Health");
+		pInventoryItem = pInventoryManager->GetItem("Health Pack");
+		pInventoryItem->Add(20);
+		break;
+	case 22: // laser gun
+		pInventoryManager->BindToCharacter(this);
+		// Erase the gun from this position
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+		pInventoryItem = pInventoryManager->GetItem("Laser Gun");
 		pInventoryItem->Add(1);
+		isGunPicked = true;
 		break;
 	case 99:
 		// Level has been completed
@@ -593,32 +596,3 @@ void CPlayer2D::Respawn()
 	cout << "Respawning player";
 	vec2Position = vec2StartPosition;
 }
-
-/**
- @brief Update the health and lives.
- */
-//void CPlayer2D::UpdateHealthLives(void)
-//{
-//	// Update health and lives
-//	pInventoryItem = pInventoryManager->GetItem("Health");
-//	// If health is less than or equal to 0, then reduce the lives by 1
-//	if (pInventoryItem->GetCount() <= 0)
-//	{
-//		// Reset the Health to max value
-//		pInventoryItem->iItemCount = pInventoryItem->GetMaxCount();
-//		// But we reduce the lives by 1.
-//		pInventoryItem = pInventoryManager->GetItem("Lives");
-//		pInventoryItem->Remove(1);
-//
-//		// if no health -> respawn player
-//		vec2Position = playerStartPos;
-//
-//		// Check if there is no lives left...
-//		if (pInventoryItem->GetCount() <= 0)
-//		{
-//			// Player loses the game
-//			CGameManager::GetInstance()->bPlayerLost = true;
-//			
-//		}
-//	}
-//}

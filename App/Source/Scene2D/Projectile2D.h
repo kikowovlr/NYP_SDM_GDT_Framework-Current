@@ -63,7 +63,11 @@ public:
 
 	const glm::vec2 vec2HalfSize = glm::vec2(2.5f, 2.5f);
 
+	void CalculateRotation();
+
 protected:
+	void InteractWithPorts();
+
 	// Remaining lifetime in seconds
 	double dLifetime;
 	// Speed of this projectile in unit / sec
@@ -81,6 +85,9 @@ protected:
 	glm::vec2 vec2Scale;
 	// Bool flag to indicate if this projectile is visible
 	bool bVisible;
+
+	float rotationAngle;       // Stores calculated rotation angle
+
 
 	// Handler to the CMap2D instance
 	CMap2D* pMap2D;

@@ -139,5 +139,7 @@ protected:
 	CInventoryManager* pInventoryManager;
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
+
+	bool isGunPicked;
 };
 

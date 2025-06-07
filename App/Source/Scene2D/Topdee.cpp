@@ -156,10 +156,10 @@ bool CTopdee::Init(void)
 	// Bind to topdee invetory
 	pInventoryManager->BindToCharacter(this);
 
-	// Set the Physics to fall status by default
+	// Set the Physics to idle status by default
 	cPhysics2D.Init();
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
 
 	return true;
 }
@@ -208,7 +208,7 @@ bool CTopdee::Update(const double dElapsedTime)
 	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::WALK)
 		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
 
-	// Get keyboard updates
+	// Sprinting
 	if ((pKeyboardController->IsKeyDown(GLFW_KEY_LEFT_SHIFT)) ||
 		(pKeyboardController->IsKeyDown(GLFW_KEY_RIGHT_SHIFT)))
 	{
@@ -250,7 +250,7 @@ bool CTopdee::Update(const double dElapsedTime)
 				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::WALK);
 		}
 	}
-	else {
+	else { // slower movement
 		// Left-right movement
 		if ((pKeyboardController->IsKeyDown(GLFW_KEY_A)) &&
 			(pKeyboardController->IsKeyDown(GLFW_KEY_D)))
@@ -290,49 +290,6 @@ bool CTopdee::Update(const double dElapsedTime)
 		}
 	}
 
-	// Jump movement
-	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
-	{
-		// For jump
-		if (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::IDLE)
-		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::JUMP);
-			cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
-			cPhysics2D.SetNewJump(true);
-		}
-		// For double jump
-		else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP)
-		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::DOUBLEJUMP);
-			cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
-			cPhysics2D.SetNewJump(true);
-		}
-	}
-
-	// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
-	if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-		&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::FALL))
-	{
-		// Update the elapsed time to the physics engine
-		cPhysics2D.AddElapsedTime((float)dElapsedTime);
-		// Call the physics engine update method to calculate the final velocity and displacement
-		cPhysics2D.Update(dElapsedTime);
-		// Get the displacement from the physics engine and update the player position
-		vec2MovementVelocity += cPhysics2D.GetFinalVelocity();
-
-		// Set the physics vertical status from jump/double jump to fall if the movement direction changes to negative
-		if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-			&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-		{
-			if (cPhysics2D.GetFinalVelocity().y < 0.0f)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL, false);
-		}
-	}
-
-	if ((pKeyboardController->IsKeyDown(GLFW_KEY_A)) /*&& (pKeyboardController->IsKeyDown(GLFW_KEY_SPACE))*/)
-	{
-		if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::WALK);
-	}
 	// Update vec2Position
 	glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
 	// For calculating the collision point's x-coordinate
@@ -347,22 +304,6 @@ bool CTopdee::Update(const double dElapsedTime)
 		if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordX) == CSettings::RESULTS::POSITIVE)
 		{
 			cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-			//cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-		}
-		//if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-		//{
-		//	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//}
-			
-		if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-		{
-			// Check if he is walking on air; let him fall down
-			glm::vec2 vec2InAirPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y);
-			if (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2InAirPosition, fCollisionCoordY) == CSettings::RESULTS::NEGATIVE)
-			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-				//cout << "*** Walked off a platform. Set to Fall ***" << endl;
-			}
 		}
 	}
 
@@ -370,47 +311,28 @@ bool CTopdee::Update(const double dElapsedTime)
 	if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::WALK) &&
 		(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
 	{
-		//cout << "Vertical collision when walking!" << endl;
 		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//cout << "*** Hit a platform at the top/bottom: Set to Idle ***" << endl;
-	}
-	// Check for collision with the Tile Maps vertically
-	else if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP) &&
-		(cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP) &&
-		(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
-	{
-		//cout << "Vertical collision when jumping!" << endl;
-		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-		//cout << "*** Hit a platform on top: Set to Fall ***" << endl;
-	}
-	// Check for collision with the Tile Maps vertically
-	else if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL) &&
-		(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
-	{
-		//cout << "Vertical collision when falling!" << endl;
-		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//cout << "*** Hit a platform at the bottom: Set to Idle ***" << endl;
 	}
 
 	// Update the vec2Position with the new position
 	vec2Position = vec2NewPosition;
 
-	// shooting mechanic
-	if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
-	{
-		glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
-			CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
-			pMouseController->GetMousePositionY() - vec2Position.y));
-		// Activate a CProjectil2D
-		pProjectileManager2D->Activate(vec2Position,
-			temp, 2.0, 200.0f, this);
+	//// shooting mechanic
+	//if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
+	//{
+	//	glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
+	//		CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
+	//		pMouseController->GetMousePositionY() - vec2Position.y));
+	//	// Activate a CProjectil2D
+	//	pProjectileManager2D->Activate(vec2Position,
+	//		temp, 2.0, 200.0f, this);
 
-		cShootStatus.SetToCannotShoot();
-	}
-	else
-	{
-		cShootStatus.Update(dElapsedTime);
-	}
+	//	cShootStatus.SetToCannotShoot();
+	//}
+	//else
+	//{
+	//	cShootStatus.Update(dElapsedTime);
+	//}
 
 	// Constraint the player within the map
 	if (pMap2D->Constraint(vec2Position) == true)
@@ -423,14 +345,6 @@ bool CTopdee::Update(const double dElapsedTime)
 		{
 			cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 		}
-		if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-		}
-		//else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-		//{
-		//	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-		//}
 	}
 
 	// Interact with the Map
@@ -557,10 +471,11 @@ void CTopdee::InteractWithMap(void)
 		pInventoryItem->Remove(1);
 		cout << "Health: " << pInventoryItem->GetCount() << endl;
 		break;
-	case 21:
+	case 21: // health pack
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the health
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Add(1);
+		pInventoryItem = pInventoryManager->GetItem("Health Pack");
+		pInventoryItem->Add(20);
 		break;
 	case 99:
 		// Level has been completed

@@ -14,6 +14,7 @@
 */
 CInventoryManager::CInventoryManager(void) 
 {
+	inventoryMap.clear(); // Explicit initialization
 }
 
 /**
@@ -72,24 +73,27 @@ CInventoryItem* CInventoryManager::Add(
 	const int iItemMaxCount,
 	const int iItemCount)
 {
-	// Get current character's inventory (create if doesn't exist)
-	auto& charInventory = characterInventories[activeCharacter];
+   // Check for duplicates (global or character-bound)
+    if (Check(_name)) {
+        throw std::exception("Duplicate item name");
+        return nullptr;
+    }
 
-	// Check for duplicates in THIS CHARACTER'S inventory only
-	if (charInventory.find(_name) != charInventory.end()) {
-		throw std::exception("Duplicate item name for this character");
-		return nullptr;
-	}
+    // Create new item
+    CInventoryItem* cNewItem = new CInventoryItem(imagePath);
+    cNewItem->iItemMaxCount = iItemMaxCount;
+    cNewItem->iItemCount = iItemCount;
 
-	// Create new item
-	CInventoryItem* cNewItem = new CInventoryItem(imagePath);
-	cNewItem->iItemMaxCount = iItemMaxCount;
-	cNewItem->iItemCount = iItemCount;
+    // Add to global or character inventory
+    if (activeCharacter) {
+        // Add to character's personal inventory
+        characterInventories[activeCharacter][_name] = cNewItem;
+    } else {
+        // Add to global inventory
+        inventoryMap[_name] = cNewItem;
+    }
 
-	// Add to current character's inventory
-	charInventory[_name] = cNewItem;
-
-	return cNewItem;
+    return cNewItem;
 }
 
 /**
@@ -116,7 +120,7 @@ CInventoryItem* CInventoryManager::Add(
 //}
 bool CInventoryManager::Remove(const std::string& _name)
 {
-	// If no character is bound, use original inventory
+	// If no character is bound, use global inventory
 	if (!activeCharacter) {
 		if (!Check(_name)) {
 			throw std::exception("Unknown item name provided");
@@ -239,7 +243,6 @@ void CInventoryManager::DebugPrintAllInventories(CEntity2D* topdee, CEntity2D* t
 	DebugPrintCharacterInventory(topdee, "TOPDEE");
 	DebugPrintCharacterInventory(toodee, "TOODEE");
 }
-
 
 void CInventoryManager::DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const
 {

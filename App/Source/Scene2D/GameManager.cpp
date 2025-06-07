@@ -75,6 +75,9 @@ bool CGameManager::Init(void)
 	pInventoryItem = pInventoryManager->Add("Tree", "Image/Scene2D_TreeTile.tga", 5, 0);
 	pInventoryItem->vec2Size = glm::vec2(25, 25);
 
+	pInventoryItem = pInventoryManager->Add("Health Pack", "Image/health-pack.png", 3, 0);
+	pInventoryItem->vec2Size = glm::vec2(25, 25);
+
 	return true;
 }
 

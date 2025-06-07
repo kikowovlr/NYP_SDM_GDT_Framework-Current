@@ -112,6 +112,7 @@ int CProjectileManager2D::Activate(	glm::vec2 vec2Position,
 {
 	// Since a projectile has been added, we activate the next element in the vector
 	vProjectile[uiIndexLast]->Init(vec2Position, vec2Direction, dLifetime, fSpeed);
+	vProjectile[uiIndexLast]->SetDirection(vec2Direction);
 	//vProjectile[uiIndexLast]->SetPreviousPosition(vec2Position);
 	//vProjectile[uiIndexLast]->InitCollider(	"Shader3D_Line", 
 	//										glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),

@@ -133,8 +133,8 @@ bool CScene2D::Init(void)
 	pGameManager = CGameManager::GetInstance();
 	pGameManager->Init();
 
-	// Debug inventories
-	CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
+	//// Debug inventories
+	//CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
 
 	return true;
 }
@@ -146,6 +146,13 @@ bool CScene2D::Init(void)
  */
 bool CScene2D::Update(const double dElapsedTime)
 {
+	//debug
+	if (pKeyboardController->IsKeyPressed(GLFW_KEY_P))
+		CInventoryManager::GetInstance()->DebugPrintAllInventories(pCharacterManager->GetTopdee(), pCharacterManager->GetToodee());
+	// Switch character the moment TAB is pressed
+	if (pKeyboardController->IsKeyPressed(GLFW_KEY_TAB))
+		pCharacterManager->SwitchCharacter();
+
 	// Call the pPlayer2D's update method before Map2D as we want to capture the inputs before map2D update
 	pCharacterManager->UpdateCurrentCharacter(dElapsedTime);
 

@@ -100,8 +100,6 @@ protected:
 	// Let player interact with the map
 	void InteractWithMap(void);
 
-	// Constant variable for jump speed
-	const glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 300.0f);
 	// Constant variable for walk speed
 	const glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
 	glm::vec2 vec2WalkSpeedMultiplier = glm::vec2(2.f, 2.f);

@@ -40,6 +40,10 @@ public:
 	void BindToCharacter(CEntity2D* character);
 
 	void DebugPrintAllInventories(CEntity2D* topdee = nullptr, CEntity2D* toodee = nullptr) const;
+
+	CEntity2D* GetActiveCharacter() const {
+		return activeCharacter;
+	}
 protected:
 	// Constructor
 	CInventoryManager(void);

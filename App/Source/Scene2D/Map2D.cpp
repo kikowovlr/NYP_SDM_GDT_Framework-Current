@@ -112,10 +112,10 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 
 	// Load and create textures
 	// Load the ground texture
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_GroundTile.tga", true);
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/ground.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/Scene2D_GroundTile.tga" << endl;
+		cout << "Unable to load Image/ground.png" << endl;
 		return false;
 	}
 	else
@@ -123,6 +123,82 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(100, iTextureID));
 	}
+	// dirt
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/dirt.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/dirt.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(101, iTextureID));
+	}
+	// crate
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/crate.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/crate.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(102, iTextureID));
+	}
+	// port off
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/port-off.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/port-off.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(103, iTextureID));
+	}
+	// port on
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/port-on.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/port-on.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(104, iTextureID));
+	}
+
+
+	// COLLECTABLES
+	// Load the Spa texture
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/health-pack.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/health-pack.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(21, iTextureID));
+	}
+	// Load the gun texture
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/laser-gun.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/laser-gun.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(22, iTextureID));
+	}
+
 	// Load the tree texture
 	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_TreeTile.tga", true);
 	if (iTextureID == 0)
@@ -159,18 +235,7 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(20, iTextureID));
 	}
-	// Load the Spa texture
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_Spa.tga", true);
-	if (iTextureID == 0)
-	{
-		cout << "Unable to load Image/Scene2D_Spa.tga" << endl;
-		return false;
-	}
-	else
-	{
-		// Store the texture ID into MapOfTextureIDs
-		MapOfTextureIDs.insert(pair<int, int>(21, iTextureID));
-	}
+
 	// Load the Exit texture
 	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_Exit.tga", true);
 	if (iTextureID == 0)
@@ -183,17 +248,6 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(99, iTextureID));
 	}
-	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_MetalTile.tga", true);
-	//if (iTextureID == 0)
-	//{
-	//	cout << "Unable to load Image/Scene2D_MetalTile.tga" << endl;
-	//	return false;
-	//}
-	//else
-	//{
-	//	// Store the texture ID into MapOfTextureIDs
-	//	MapOfTextureIDs.insert(pair<int, int>(201, iTextureID));
-	//}
 
 	return true;
 }

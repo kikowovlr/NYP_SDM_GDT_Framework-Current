@@ -71,10 +71,10 @@ bool CProjectile2D::Init(	glm::vec2 vec2Position,
 	p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
 
 	// load and create a texture 
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_Projectile.tga", false);
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/laser-bullet.png", false);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/Scene2D_Projectile.tga" << endl;
+		cout << "Unable to load Image/laser-bullet.png" << endl;
 		return false;
 	}
 
@@ -106,6 +106,7 @@ void CProjectile2D::SetStatus(const bool bStatus)
 void CProjectile2D::SetDirection(glm::vec2 vec2Direction)
 {
 	this->vec2Direction = vec2Direction;
+	CalculateRotation();
 }
 
 /** 
@@ -213,7 +214,10 @@ bool CProjectile2D::Update(const double dElapsedTime)
 	// Update the model
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
+	model = glm::rotate(model, rotationAngle, glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 1.0f));
+
+	//InteractWithPorts()
 
 	return true;
 }
@@ -266,3 +270,26 @@ void CProjectile2D::PrintSelf(void)
 	else
 		cout << "Inactive" << endl;
 }
+
+void CProjectile2D::CalculateRotation()
+{
+	rotationAngle = atan2f(vec2Direction.y, vec2Direction.x);
+}
+
+//void CProjectile2D::InteractWithPorts()
+//{
+//	int iPositionX = 0;
+//	int iPositionY = 0;
+//	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
+//		return;
+//
+//	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
+//	{
+//	case 103:
+//		cout << "changing panel" << endl;
+//		pMap2D->SetMapInfo(iPositionY, iPositionX, 104);
+//		break;
+//	default:
+//		break;
+//	}
+//}
