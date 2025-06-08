@@ -13,6 +13,8 @@ using namespace std;
 
 #include "System\filesystem.h"
 
+#include "Player2D.h"
+
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
  */
@@ -134,8 +136,8 @@ bool CScene2D::Init(void)
 	pGameManager->Init();
 
 	pMap2D->SetDoorPositions(
-		glm::ivec2(6, 6),  // Entrance door pos
-		glm::ivec2(12, 6)   // Exit door pos
+		glm::ivec2(17, 13),  // Entrance door pos
+		glm::ivec2(19, 5)   // Exit door pos
 	);
 
 	return true;
@@ -165,12 +167,12 @@ bool CScene2D::Update(const double dElapsedTime)
 	// check if doors are unlocked or not
 	if (pMap2D->AreDoorsUnlocked())
 	{
-		CEntity2D* pEntity = pCharacterManager->GetTopdee();
-		CTopdee* pTopdee = dynamic_cast<CTopdee*>(pEntity); // safe downcast
+		CEntity2D* pEntity = pCharacterManager->GetToodee();
+		CPlayer2D* pToodee = dynamic_cast<CPlayer2D*>(pEntity); // safe downcast
 
-		// only topdee can interact with door
-		if (pTopdee)
-			pTopdee->InteractWithDoors();
+		// only toodee can interact with door
+		if (pToodee)
+			pToodee->InteractWithDoors();
 	}
 
 	// Call the pProjectileManager2D's update method
@@ -195,24 +197,19 @@ bool CScene2D::Update(const double dElapsedTime)
 	}
 
 	pGUI_Scene2D->Update(dElapsedTime);
-
-	// Check if the game should go to the next level
-	if (pGameManager->bLevelCompleted == true)
-	{
-		pMap2D->SetCurrentLevel(pMap2D->GetCurrentLevel() + 1);
-		pCharacterManager->ResetAllCharacters();
-		pGameManager->bLevelCompleted = false;
-	}
+	pGameManager->UpdatePlayerState();
+	pGameManager->CheckCompleteGame();
 
 	// Check if the game has been won by the player
 	if (pGameManager->bPlayerWon == true)
 	{
 		// End the game and switch to Win screen
+		false;
 	}
 	// Check if the game should be ended
 	else if (pGameManager->bPlayerLost == true)
 	{
-		pCharacterManager->DeactivateAllCharacters();;
+		pCharacterManager->DeactivateAllCharacters();
 		return false; // closes the app
 	}
 

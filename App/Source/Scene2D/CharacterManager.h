@@ -17,9 +17,11 @@
 // Include CEntity2D
 #include "Primitives/Entity2D.h"
 
-// Include CPlayer2D
-#include "Player2D.h"
-#include "Topdee.h"
+// forward declaration
+class CPlayer2D;
+class CTopdee;
+class CEntity2D;
+#include "CharacterStates.h"
 
 class CharacterManager : public CSingletonTemplate<CharacterManager>
 {
@@ -42,6 +44,8 @@ public:
 
 	void DeactivateAllCharacters();
 
+	bool ShouldEndGame();
+
 	CEntity2D* GetTopdee();
 	CEntity2D* GetToodee();
 
@@ -51,7 +55,6 @@ private:
 	CPlayer2D* toodee;
 
 	// Saved states
-	CTopdee::TopdeeState* savedTopdeeState = nullptr; // nullptr = "no state"
-	CPlayer2D::ToodeeState* savedToodeeState = nullptr;
+	TopdeeState* savedTopdeeState = nullptr; // nullptr = "no state"
+	ToodeeState* savedToodeeState = nullptr;
 };
-

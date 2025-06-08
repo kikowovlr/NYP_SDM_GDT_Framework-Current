@@ -20,6 +20,7 @@ CPhysics2D::CPhysics2D(void)
 	, fTotalTime(0.0f)
 	, fElapsedTime(0.0f)
 	, sCurrentVerticalStatus(VERTICALSTATUS::IDLE)
+	, sCurrentWallJumpStatus(WALLJUMPSTATUS::NOT_ATTACHED)
 	, bNewJump(false)
 {
 }
@@ -141,6 +142,19 @@ void CPhysics2D::SetHorizontalStatus(const HORIZONTALSTATUS sHorizontalStatus, c
 	}
 }
 
+void CPhysics2D::SetWallJumpStatus(const WALLJUMPSTATUS sWallJumpStatus, const bool bInit)
+{
+	// If there is a change in status, then reset to default values
+	if (sWallJumpStatus != sCurrentWallJumpStatus)
+	{
+		// Reset to default values
+		if (bInit)
+			Init();
+
+		sCurrentWallJumpStatus = sWallJumpStatus;
+	}
+}
+
 /**
  @brief Set bNewJump
  */
@@ -220,6 +234,11 @@ CPhysics2D::VERTICALSTATUS CPhysics2D::GetVerticalStatus(void) const
 CPhysics2D::HORIZONTALSTATUS CPhysics2D::GetHorizontalStatus(void) const
 {
 	return sCurrentHorizontalStatus;
+}
+
+CPhysics2D::WALLJUMPSTATUS CPhysics2D::GetWallJumpStatus() const
+{
+	return sCurrentWallJumpStatus;
 }
 
 /**

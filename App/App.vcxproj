@@ -27,6 +27,7 @@
     <ClCompile Include="Source\Scene2D\Topdee.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Scene2D\CharacterStates.h" />
     <ClInclude Include="Source\Scene2D\CharacterManager.h" />
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\Scene2D\GameManager.h" />

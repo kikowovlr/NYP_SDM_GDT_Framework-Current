@@ -37,6 +37,8 @@ public:
 	// update player lives & health
 	void UpdatePlayerState();
 
+	void CheckCompleteGame();
+
 protected:
 	// Constructor
 	CGameManager(void);

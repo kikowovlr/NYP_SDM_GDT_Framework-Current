@@ -167,6 +167,9 @@ public:
 	bool IsEntranceDoor(int x, int y) const;
 	glm::ivec2 GetExitDoorPos() const;
 
+	//void LockChest();
+	//void UnlockChest();
+
 protected:
 	// The variable containing the rapidcsv::Document
 	// We will load the CSV file's content into this Document
@@ -212,7 +215,7 @@ protected:
 		float timeLeft;      // Countdown timer
 	};
 	std::vector<BlockReset> blocksToReset;  // Tracks all blocks waiting to reset
-	float resetDelay = 10.0f; // Time until reset (seconds)
+	float resetDelay = 15.0f; // Time until reset (seconds)
 
 	// Door open logic
 	std::vector<std::pair<int, int>> activePorts; // Active port positions

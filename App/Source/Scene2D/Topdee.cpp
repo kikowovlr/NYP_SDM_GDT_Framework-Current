@@ -31,6 +31,7 @@ CTopdee::CTopdee(void)
 	, pProjectileManager2D(NULL)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
+	, pCharacterManager(NULL)
 {
 	// Initialise position of the player
 	vec2Position = glm::vec2(0);
@@ -55,6 +56,8 @@ CTopdee::~CTopdee(void)
 
 	// We won't delete this since it was created elsewhere
 	pInventoryManager = NULL;
+
+	pCharacterManager = NULL;
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	glDeleteVertexArrays(1, &VAO);
@@ -116,37 +119,21 @@ bool CTopdee::Init(void)
 
 	// Teacher texture
 	// Load the player texture 
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/scene2d_enemy.png", true);
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/topdee.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/scene2d_enemy.png" << endl;
+		cout << "Unable to load Image/topdee.png" << endl;
 		return false;
 	}
 
-	////CS: Create the Quad Mesh using the mesh builder
-	//p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
-
 	//CS: Create the animated sprite and setup the animation 
-	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(3, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	pAnimatedSprites->AddAnimation("idle", 0, 2);
-	pAnimatedSprites->AddAnimation("right", 3, 5);
-	pAnimatedSprites->AddAnimation("left", 6, 8);
-	//CS: Play the "idle" animation as default
-	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
-
-	//iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/SpriteBunny.png", true);
-	//if (iTextureID == 0)
-	//{
-	//	cout << "Unable to load Image/SpriteBunny.png" << endl;
-	//	return false;
-	//}
-
-	////CS: Create the animated sprite and setup the animation 
-	//pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(2, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
-	//pAnimatedSprites->AddAnimation("right", 0, 2);
-	//pAnimatedSprites->AddAnimation("left", 3, 5);
-	//// default anim is right
-	//pAnimatedSprites->PlayAnimation("right", -1, 2.f);
+	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(4, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	pAnimatedSprites->AddAnimation("right", 0, 2);
+	pAnimatedSprites->AddAnimation("left", 3, 5);
+	pAnimatedSprites->AddAnimation("front", 6, 8);
+	pAnimatedSprites->AddAnimation("back", 9, 11);
+	//CS: Play the "front" animation as default
+	pAnimatedSprites->PlayAnimation("front", -1, 1.0f);
 	 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -156,10 +143,15 @@ bool CTopdee::Init(void)
 	// Bind to topdee invetory
 	pInventoryManager->BindToCharacter(this);
 
+	pInventoryItem = pInventoryManager->Add("Crate", "Image/crate.png", 1, 0);
+	pInventoryItem->vec2Size = glm::vec2(25, 25);
+
 	// Set the Physics to idle status by default
 	cPhysics2D.Init();
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+
+	pCharacterManager = CharacterManager::GetInstance();
 
 	return true;
 }
@@ -185,8 +177,8 @@ bool CTopdee::Reset()
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
 
-	//CS: Play the "idle" animation as default
-	pAnimatedSprites->PlayAnimation("idle", -1, 1.0f);
+	//CS: Play the "front" animation as default
+	pAnimatedSprites->PlayAnimation("front", -1, 1.0f);
 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -201,12 +193,25 @@ bool CTopdee::Reset()
  */
 bool CTopdee::Update(const double dElapsedTime)
 {
+
+	if (isAtExit) // dont update if at exit
+		return true;
+
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
 	// Set the physics horizontal status to idle
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::WALK)
 		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+
+	if (pKeyboardController->IsKeyDown(GLFW_KEY_A))
+		pAnimatedSprites->PlayAnimation("left", -1, 1.0f);
+	else if (pKeyboardController->IsKeyDown(GLFW_KEY_D))
+		pAnimatedSprites->PlayAnimation("right", -1, 1.0f);
+	else if (pKeyboardController->IsKeyDown(GLFW_KEY_S))
+		pAnimatedSprites->PlayAnimation("front", -1, 1.0f);
+	else if (pKeyboardController->IsKeyDown(GLFW_KEY_W))
+		pAnimatedSprites->PlayAnimation("back", -1, 1.0f);
 
 	// Sprinting
 	if ((pKeyboardController->IsKeyDown(GLFW_KEY_LEFT_SHIFT)) ||
@@ -330,6 +335,12 @@ bool CTopdee::Update(const double dElapsedTime)
 		}
 	}
 
+	// picking up block mechanic
+	if (pKeyboardController->IsKeyPressed(GLFW_KEY_E))
+	{
+		PickUpOrPutDownBlock();
+	}
+
 	// Interact with the Map
 	InteractWithMap();
 
@@ -371,7 +382,12 @@ void CTopdee::Render(void)
 	CShaderManager::GetInstance()->pActiveShader->setMat4("Model", model);
 	CShaderManager::GetInstance()->pActiveShader->setMat4("Projection", projection);
 	unsigned int colourLoc = glGetUniformLocation(CShaderManager::GetInstance()->pActiveShader->ID, "ColourTint");
-	glUniform4fv(colourLoc, 1, glm::value_ptr(vec4ColourTint));
+	glm::vec4 darkColor = vec4ColourTint;
+	// if not active character, darken sprite
+	if (this != pCharacterManager->GetActiveCharacter() || isAtExit)
+		// Darken the color (values between 0 and 1)
+		darkColor = vec4ColourTint * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f); // 50% darker
+	glUniform4fv(colourLoc, 1, glm::value_ptr(darkColor));
 
 	// bind textures on corresponding texture units
 	glActiveTexture(GL_TEXTURE0);
@@ -399,7 +415,7 @@ void CTopdee::PostRender(void)
 	glDisable(GL_BLEND);
 }
 
-CTopdee::TopdeeState CTopdee::SaveState() const
+TopdeeState CTopdee::SaveState() const
 {
 	return {
 		vec2Position,
@@ -434,37 +450,13 @@ void CTopdee::InteractWithMap(void)
 
 	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
 	{
-	case 2:
-		// Erase the tree from this position
-		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the Tree by 1
-		pInventoryItem = pInventoryManager->GetItem("Tree");
-		pInventoryItem->Add(1);
-		break;
-	case 10:
-		// Erase the life from this position
-		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the lives by 1
-		pInventoryItem = pInventoryManager->GetItem("Lives");
-		pInventoryItem->Add(1);
-		break;
-	case 20:
-		// Decrease the health by 1
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Remove(1);
-		cout << "Health: " << pInventoryItem->GetCount() << endl;
-		break;
-	case 21: // health pack
-		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the health
-		pInventoryItem = pInventoryManager->GetItem("Health Pack");
-		pInventoryItem->Add(20);
-		break;
 	case 99:
 		// Level has been completed
-		pInventoryItem = pInventoryManager->GetItem("Tree");
-		if (pInventoryItem->GetCount() >= 5) {
-			CGameManager::GetInstance()->bLevelCompleted = true;
+		if (pKeyboardController->IsKeyPressed(GLFW_KEY_ENTER))
+		{
+			isAtExit = true;
+			// deactive once through the door
+			SetStatus(false);
 		}
 		break;
 	default:
@@ -472,20 +464,58 @@ void CTopdee::InteractWithMap(void)
 	}
 }
 
-void CTopdee::InteractWithDoors()
+
+
+glm::ivec2 CTopdee::GetFacingDirection()
 {
-	int iPositionX = 0;
-	int iPositionY = 0;
-	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
-		return;
+	// get facing direction based on sprite animation
+	if (pAnimatedSprites->GetCurrentAnimationName() == "right")
+		return glm::ivec2(1, 0);
+	else if (pAnimatedSprites->GetCurrentAnimationName() == "left")
+		return glm::ivec2(-1, 0);
+	else if (pAnimatedSprites->GetCurrentAnimationName() == "front")
+		return glm::ivec2(0, -1);
+	else if (pAnimatedSprites->GetCurrentAnimationName() == "back")
+		return glm::ivec2(0, 1);
 
-	// Check if player is standing on the entrance door (not exit) and pressed 'E'
-	if (pMap2D->IsEntranceDoor(iPositionX, iPositionY) && pKeyboardController->IsKeyPressed(GLFW_KEY_E)) {
-		pMap2D->SetAreDoorsUsed(true);
-		// Teleport to exit door
-		glm::ivec2 exitPos = pMap2D->GetExitDoorPos();
-		vec2Position = glm::vec2((exitPos.x + 0.5f) * 25.f, (exitPos.y + 0.5f) * 25.f); // Center player
+	return glm::ivec2(0, 0);
+}
 
-		cout << "topdee pos: " << vec2Position.x << ", " << vec2Position.y << endl;
+void CTopdee::PickUpOrPutDownBlock()
+{
+	int iPlayerTileX = 0;
+	int iPlayerTileY = 0;
+	pMap2D->GetTileIndexAtPosition(vec2Position, iPlayerTileX, iPlayerTileY);
+	glm::ivec2 facingDir = GetFacingDirection();
+	int iFacingTileX = iPlayerTileX + facingDir.x;
+	int iFacingTileY = iPlayerTileY + facingDir.y;
+
+	pInventoryManager->BindToCharacter(this);
+	pInventoryItem = pInventoryManager->GetItem("Crate");
+
+	// no block in inventory > pick up block
+	if (pInventoryItem->GetCount() <= 0)
+	{
+		// Check if the CENTER of the facing tile has a crate (ID 102) within 25.0f units
+		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 102 &&
+			glm::distance(vec2Position, glm::vec2(iFacingTileX * 25.0f + 12.5f, iFacingTileY * 25.0f + 12.5f)) <= 26.0f) { // 26 for leeway
+			// Remove from map
+			pMap2D->SetMapInfo(iFacingTileY, iFacingTileX, 0);
+			pInventoryItem->Add(1);
+		}
 	}
+	// block in inventory > put down block
+	else
+	{
+		// check if facing tile is empty
+		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 0) {
+			pMap2D->SetMapInfo(iFacingTileY, iFacingTileX, 102);
+			pInventoryItem->Remove(1);
+		}
+	}
+}
+
+bool CTopdee::IsAtExit() const
+{
+	return isAtExit;
 }

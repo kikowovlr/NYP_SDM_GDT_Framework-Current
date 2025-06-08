@@ -83,6 +83,7 @@ public:
 	void Pause();
 	void Resume();
 	void Reset();
+	std::string GetCurrentAnimationName();
 
 private:
 	//number of rows

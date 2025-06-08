@@ -250,3 +250,8 @@ void CSpriteAnimation::Reset(void)
 	currentFrame = animationList[currentAnimation]->frames[0];
 	playCount = 0;
 }
+
+std::string CSpriteAnimation::GetCurrentAnimationName()
+{
+	return currentAnimation;
+}

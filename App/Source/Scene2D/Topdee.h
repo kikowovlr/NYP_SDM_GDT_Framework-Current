@@ -48,11 +48,13 @@
 // Include InventoryManager
 #include "InventoryManager.h"
 
+#include "CharacterManager.h"
+#include "CharacterStates.h"
+
 class CTopdee : public CSingletonTemplate<CTopdee>, public CEntity2D
 {
 	friend CSingletonTemplate<CTopdee>;
 public:
-
 	// Init
 	bool Init(void);
 
@@ -71,26 +73,15 @@ public:
 	// PostRender
 	void PostRender(void);
 
-	// save character state
-	struct TopdeeState {
-		// Physics
-		glm::vec2 position;
-		glm::vec2 velocity;
-
-		glm::vec4 colourTint;  // For visual effects
-		bool isActive;         // bStatus
-
-		//// Character-specific
-		//float abilityCooldown;  // Example: TopDee's dash cooldown
-		//bool isFacingRight;
-	};
-
 	TopdeeState SaveState() const;
 	void LoadState(const TopdeeState& state);
 
 	void Respawn() override;
 
-	void InteractWithDoors();
+	glm::ivec2 GetFacingDirection();
+	void PickUpOrPutDownBlock();
+
+	bool IsAtExit() const;
 
 protected:
 	// Constructor
@@ -136,5 +127,9 @@ protected:
 	CInventoryManager* pInventoryManager;
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
+
+	CharacterManager* pCharacterManager;
+
+	bool isAtExit = false;
 };
 

@@ -20,6 +20,8 @@
 
 #include <iostream>
 #include <vector>
+
+#include "Player2D.h"
 using namespace std;
 
 // For AStar PathFinding
@@ -173,7 +175,7 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 	}
 
 	// COLLECTABLES
-	// Load the Spa texture
+	// Load the health pack texture
 	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/health-pack.png", true);
 	if (iTextureID == 0)
 	{
@@ -221,7 +223,7 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(24, iTextureID));
 	}
-	// opened door
+	// energy can
 	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/energy-can.png", true);
 	if (iTextureID == 0)
 	{
@@ -233,12 +235,45 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(25, iTextureID));
 	}
-
-	// Load the tree texture
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_TreeTile.tga", true);
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/key.png", true);
 	if (iTextureID == 0)
 	{
-		cout << "Unable to load Image/Scene2D_TreeTile.tga" << endl;
+		cout << "Unable to load Image/key.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(26, iTextureID));
+	}
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/chest.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/chest.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(27, iTextureID));
+	}
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/spike.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/spike.png" << endl;
+		return false;
+	}
+	else
+	{
+		// Store the texture ID into MapOfTextureIDs
+		MapOfTextureIDs.insert(pair<int, int>(28, iTextureID));
+	}
+
+	// Load the orb texture
+	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/orb.png", true);
+	if (iTextureID == 0)
+	{
+		cout << "Unable to load Image/orb.png" << endl;
 		return false;
 	}
 	else
@@ -257,18 +292,6 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 	{
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(10, iTextureID));
-	}
-	// Load the spike texture
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_Spikes.tga", true);
-	if (iTextureID == 0)
-	{
-		cout << "Unable to load Image/Scene2D_Spikes.tga" << endl;
-		return false;
-	}
-	else
-	{
-		// Store the texture ID into MapOfTextureIDs
-		MapOfTextureIDs.insert(pair<int, int>(20, iTextureID));
 	}
 
 	// Load the Exit texture
@@ -791,7 +814,7 @@ CSettings::RESULTS CMap2D::CheckVerticalCollision(glm::vec2 vec2StartPosition,
 					//Calculate new vec2EndPosition
 					if (iRow == iStartLeftY)
 					{
- 					cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
+ 					//cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
 					continue;
 					}
 
@@ -817,7 +840,7 @@ CSettings::RESULTS CMap2D::CheckVerticalCollision(glm::vec2 vec2StartPosition,
 				{
 					if (iRow == iStartLeftY)
 					{
-						cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
+						//cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
 						continue;
 					}
 
@@ -925,7 +948,7 @@ CSettings::RESULTS CMap2D::CheckHorizontalCollision(glm::vec2 vec2StartPosition,
 				{
 					if (iCol == iStartBottomX)
 					{
-						cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
+						//cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
 						continue;
 					}
 
@@ -951,7 +974,7 @@ CSettings::RESULTS CMap2D::CheckHorizontalCollision(glm::vec2 vec2StartPosition,
 				{
 					if (iCol == iStartBottomX)
 					{
-						cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
+						//cout << "The starting index for collision check CANNOT have collision. We will skip this" << endl;
 						continue;
 					}
 

@@ -28,6 +28,11 @@ public:
 		WALK,
 		NUM_HORIZONTALSTATUS
 	};
+	enum class WALLJUMPSTATUS {
+		NOT_ATTACHED,
+		LEFT_WALL,
+		RIGHT_WALL,
+	};
 
 	// Constructor
 	CPhysics2D(void);
@@ -49,6 +54,8 @@ public:
 							const bool bInit = true);						// Set Vertical Status
 	void SetHorizontalStatus(	const HORIZONTALSTATUS sHorizontalalStatus,
 								const bool bInit = false);					// Set Horizontal Status
+	void SetWallJumpStatus(const WALLJUMPSTATUS sWallJumpStatus,
+		const bool bInit = false);
 	void SetNewJump(const bool bNewJump);									// Set bNewJump
 
 	// Get methods
@@ -60,6 +67,7 @@ public:
 	float GetTotalElapsedTime(void) const;				// Get Total Elapsed Time
 	VERTICALSTATUS GetVerticalStatus(void) const;		// Get Vertical Status
 	HORIZONTALSTATUS GetHorizontalStatus(void) const;	// Get Horizontal Status
+	WALLJUMPSTATUS GetWallJumpStatus() const;
 	bool GetNewJump(void) const;						// Get bNewJump
 
 	// Update
@@ -90,6 +98,7 @@ protected:
 	// Current status
 	VERTICALSTATUS sCurrentVerticalStatus;
 	HORIZONTALSTATUS sCurrentHorizontalStatus;
+	WALLJUMPSTATUS sCurrentWallJumpStatus;
 	
 	bool bNewJump;
 };

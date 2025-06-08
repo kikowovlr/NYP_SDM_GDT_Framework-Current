@@ -20,6 +20,7 @@ using namespace std;
 
 // Include Game Manager
 #include "GameManager.h"
+#include "CharacterManager.h"  // Include full class to use functions
 
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
@@ -31,6 +32,7 @@ CPlayer2D::CPlayer2D(void)
 	, pProjectileManager2D(NULL)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
+	, pCharacterManager(NULL)
 	, isGunPicked(false)
 {
 	// Initialise position of the player
@@ -56,6 +58,8 @@ CPlayer2D::~CPlayer2D(void)
 
 	// We won't delete this since it was created elsewhere
 	pInventoryManager = NULL;
+
+	pCharacterManager = NULL;
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	glDeleteVertexArrays(1, &VAO);
@@ -154,6 +158,9 @@ bool CPlayer2D::Init(void)
 	cPhysics2D.Init();
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	cPhysics2D.SetWallJumpStatus(CPhysics2D::WALLJUMPSTATUS::NOT_ATTACHED);
+
+	pCharacterManager = CharacterManager::GetInstance();
 
 	return true;
 }
@@ -178,6 +185,7 @@ bool CPlayer2D::Reset()
 	//Set it to fall upon entering new level
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	cPhysics2D.SetWallJumpStatus(CPhysics2D::WALLJUMPSTATUS::NOT_ATTACHED);
 
 	//CS: Play the "idle" animation as default
 	pAnimatedSprites->PlayAnimation("idle-right", -1, 1.0f);
@@ -195,8 +203,15 @@ bool CPlayer2D::Reset()
  */
 bool CPlayer2D::Update(const double dElapsedTime)
 {
-	if (pKeyboardController->IsKeyPressed(GLFW_KEY_L))
-		cout << "player pos: " << vec2Position.x/25.0f - 0.5f << ", " << vec2Position.y/25.0f - 0.5f << endl;
+	if (isAtExit) // dont update if at exit
+		return true;
+
+	// Update timers
+	if (m_bWallJumpCooldown) {
+		m_fWallJumpCooldownTimer -= dElapsedTime;
+		if (m_fWallJumpCooldownTimer <= 0.0f)
+			m_bWallJumpCooldown = false;
+	}
 
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
@@ -249,24 +264,44 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		}
 	}
 
-	// Jump movement
+	// Handle ALL jump types in one place (priority order: Wall Jump > Ground Jump > Double Jump)
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
 	{
-		// For jump
-		if (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::IDLE)
+		// 1. Wall Jump (highest priority)
+		if (CanWallJump()) {
+			float horizontalDir = (cPhysics2D.GetWallJumpStatus() == CPhysics2D::WALLJUMPSTATUS::LEFT_WALL) ? 1.0f : -1.0f;
+			glm::vec2 vec2WallJumpSpeed = glm::vec2(horizontalDir * WALL_JUMP_HORIZONTAL, WALL_JUMP_VERTICAL);
+
+			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::DOUBLEJUMP);
+			cPhysics2D.SetInitialVelocity(vec2WallJumpSpeed);
+			cPhysics2D.SetNewJump(true);
+			m_bWallJumpCooldown = true;
+			m_fWallJumpCooldownTimer = WALL_JUMP_COOLDOWN_TIME;
+		}
+		// ground jump
+		else if (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::IDLE)
 		{
 			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::JUMP);
 			cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
 			cPhysics2D.SetNewJump(true);
 		}
-		// For double jump
-		else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP)
+		// double jump
+		else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP ||
+			cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
 		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::DOUBLEJUMP);
-			cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
-			cPhysics2D.SetNewJump(true);
+			// Only allow if we haven't used double jump yet
+			if (!m_bHasDoubleJumped) {
+				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::DOUBLEJUMP);
+				cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
+				cPhysics2D.SetNewJump(true);
+				m_bHasDoubleJumped = true; // Track double jump usage
+			}
 		}
 	}
+
+	// reset double jump
+	if (IsGrounded())
+		m_bHasDoubleJumped = false;
 
 	// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
 	if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
@@ -288,8 +323,12 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		}
 	}
 
+	// wall jump mechanic
+	UpdateWallDetection(dElapsedTime);
+
 	// Update vec2Position
 	glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
+
 	// For calculating the collision point's x-coordinate
 	float fCollisionCoordX = 0;
 	// For calculating the collision point's y-coordinate
@@ -346,9 +385,11 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	vec2Position = vec2NewPosition;
 
 	// shooting mechanic
-	if (isGunPicked)
+	if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
 	{
-		if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
+		pInventoryManager->BindToCharacter(this);
+		pInventoryItem = pInventoryManager->GetItem("Energy");
+		if (isGunPicked && pInventoryItem->GetCount() >= 10) // only shoot if player has 10 or more energy and has gun
 		{
 			glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
 				CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
@@ -358,16 +399,14 @@ bool CPlayer2D::Update(const double dElapsedTime)
 				temp, 2.0, 200.0f, this);
 
 			// remove energy from inventory every time a bullet is shot
-			pInventoryManager->BindToCharacter(this);
-			pInventoryItem = pInventoryManager->GetItem("Energy");
 			pInventoryItem->Remove(10);
 
 			cShootStatus.SetToCannotShoot();
 		}
-		else
-		{
-			cShootStatus.Update(dElapsedTime);
-		}
+	}
+	else
+	{
+		cShootStatus.Update(dElapsedTime);
 	}
 
 	// Constraint the player within the map
@@ -448,11 +487,6 @@ void CPlayer2D::Render(void)
 {
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
-
-	//model = glm::translate(model, glm::vec3(0.5f * pSettings->TILE_WIDTH, 0.5f * pSettings->TILE_HEIGHT, 0.0f));
-	//model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f));
-	//model = glm::translate(model, glm::vec3(-0.5f * pSettings->TILE_WIDTH, -0.5f * pSettings->TILE_HEIGHT, 0.0f));
-
 	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 1.0f));
 	
 	// note: currently we set the projection matrix each frame, but since the projection 
@@ -460,7 +494,12 @@ void CPlayer2D::Render(void)
 	CShaderManager::GetInstance()->pActiveShader->setMat4("Model", model);
 	CShaderManager::GetInstance()->pActiveShader->setMat4("Projection", projection);
 	unsigned int colourLoc = glGetUniformLocation(CShaderManager::GetInstance()->pActiveShader->ID, "ColourTint");
-	glUniform4fv(colourLoc, 1, glm::value_ptr(vec4ColourTint));
+	glm::vec4 darkColor = vec4ColourTint;
+	// if not active character, darken sprite
+	if (this != pCharacterManager->GetActiveCharacter() || isAtExit)
+		// Darken the color (values between 0 and 1)
+		darkColor = vec4ColourTint * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f); // 50% darker
+	glUniform4fv(colourLoc, 1, glm::value_ptr(darkColor));
 
 	// bind textures on corresponding texture units
 	glActiveTexture(GL_TEXTURE0);
@@ -471,10 +510,6 @@ void CPlayer2D::Render(void)
 			pAnimatedSprites->Render();
 		glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	//CEntity2D::PreRender();
-	//CEntity2D::Render();
-	//CEntity2D::PostRender();
 
 	return;
 }
@@ -488,7 +523,7 @@ void CPlayer2D::PostRender(void)
 	glDisable(GL_BLEND);
 }
 
-CPlayer2D::ToodeeState CPlayer2D::SaveState() const
+ToodeeState CPlayer2D::SaveState() const
 {
 	return {
 		vec2Position,
@@ -505,6 +540,11 @@ void CPlayer2D::LoadState(const ToodeeState& state)
 	vec4ColourTint = state.colourTint;
 }
 
+bool CPlayer2D::IsGunPicked() const
+{
+	return false;
+}
+
 /**
  @brief Let player interact with the map. You can add collectibles such as powerups and health here.
  Decides whether smth gets destroyed after player passes it or not
@@ -518,24 +558,12 @@ void CPlayer2D::InteractWithMap(void)
 
 	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
 	{
-	case 2:
-		// Erase the tree from this position
+	case 2: // orb
+		// Erase the orb from this position
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the Tree by 1
-		pInventoryItem = pInventoryManager->GetItem("Tree");
+		// Increase the Orb by 1
+		pInventoryItem = pInventoryManager->GetItem("Orb");
 		pInventoryItem->Add(1);
-		break;
-	case 10:
-		// Erase the life from this position
-		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the lives by 1
-		pInventoryItem = pInventoryManager->GetItem("Lives");
-		pInventoryItem->Add(1);
-		break;
-	case 20: // spike
-		// Decrease the health by 1
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Remove(1);
 		break;
 	case 21: // health pack
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
@@ -559,11 +587,26 @@ void CPlayer2D::InteractWithMap(void)
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		pInventoryItem = pInventoryManager->GetItem("Energy");
 		pInventoryItem->Add(25);
+		break;
+	case 26: // key
+		// Erase key
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+		isKeyPicked = true;
+		// unlock chest -> replace with gun
+		UnlockChest();
+		break;
+	case 28: // spike
+		// Decrease the health by 1
+		pInventoryItem = pInventoryManager->GetItem("Health");
+		pInventoryItem->Remove(1);
+		break;
 	case 99:
 		// Level has been completed
-		pInventoryItem = pInventoryManager->GetItem("Tree");
-		if (pInventoryItem->GetCount() >= 5) {
-			CGameManager::GetInstance()->bLevelCompleted = true;
+		if (pKeyboardController->IsKeyPressed(GLFW_KEY_ENTER))
+		{
+			isAtExit = true;
+			// deactive once through the door
+			SetStatus(false);
 		}
 		break;
 	default:
@@ -571,8 +614,121 @@ void CPlayer2D::InteractWithMap(void)
 	}
 }
 
+void CPlayer2D::UnlockChest(void)
+{
+	unsigned int chestRow = 0, chestCol = 0;
+
+	if (pMap2D->FindValue(27, chestRow, chestCol))
+	{
+		// Convert to tile coordinates if needed
+		int tileX = static_cast<int>(chestCol);
+		int tileY = static_cast<int>(chestRow);
+
+		// replace chest with gun
+		pMap2D->SetMapInfo(chestRow, chestCol, 22);
+	}
+}
+
+void CPlayer2D::LockChest(void)
+{
+	unsigned int chestRow = 0, chestCol = 0;
+
+	if (pMap2D->FindValue(22, chestRow, chestCol))
+	{
+		// Convert to tile coordinates if needed
+		int tileX = static_cast<int>(chestCol);
+		int tileY = static_cast<int>(chestRow);
+
+		// replace gun with chest
+		pMap2D->SetMapInfo(chestRow, chestCol, 27);
+		pMap2D->SetMapInfo(keyPos.y, keyPos.x, 26);
+	}
+}
+
+void CPlayer2D::UpdateWallDetection(const double dElapsedTime)
+{
+	// reset wall jump status
+	cPhysics2D.SetWallJumpStatus(CPhysics2D::WALLJUMPSTATUS::NOT_ATTACHED);
+	
+	// skip if grounded
+	if (IsGrounded())
+		return;
+
+	// Calculate new position with wall detection offset
+	glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
+	float fCollisionCoord = 0;
+
+	// Left wall check
+	if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize,
+		vec2NewPosition - glm::vec2(WALL_DETECT_OFFSET, 0),fCollisionCoord) == CSettings::RESULTS::POSITIVE)
+	{
+		cPhysics2D.SetWallJumpStatus(CPhysics2D::WALLJUMPSTATUS::LEFT_WALL);
+	}
+
+	// Right wall check
+	else if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize,
+		vec2NewPosition + glm::vec2(WALL_DETECT_OFFSET, 0), fCollisionCoord) == CSettings::RESULTS::POSITIVE)
+	{
+		cPhysics2D.SetWallJumpStatus(CPhysics2D::WALLJUMPSTATUS::RIGHT_WALL);
+	}
+
+	// Wall sliding effect
+	if (IsWallAttached() && cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+	{
+		vec2MovementVelocity.y *= 0.6f; // Reduce fall speed
+	}
+}
+
+bool CPlayer2D::IsWallAttached() const
+{
+	// return true if player attached to left/right wall
+	return cPhysics2D.GetWallJumpStatus() != CPhysics2D::WALLJUMPSTATUS::NOT_ATTACHED;
+}
+
+bool CPlayer2D::IsGrounded()
+{
+	float fCollisionCoordY = 0;
+	glm::vec2 vec2FeetPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y + 1.0f); // Small offset
+	return (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2FeetPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE);
+}
+
+bool CPlayer2D::CanWallJump() {
+	return IsWallAttached() && !m_bWallJumpCooldown;
+}
+
+void CPlayer2D::CheckDeath()
+{
+
+	Respawn();
+}
+
+bool CPlayer2D::IsAtExit() const
+{
+	return isAtExit;
+}
+
 void CPlayer2D::Respawn()
 {
 	cout << "Respawning player";
+	if (isKeyPicked && !isGunPicked)
+		LockChest();
 	vec2Position = vec2StartPosition;
+}
+
+void CPlayer2D::InteractWithDoors()
+{
+	int iPositionX = 0;
+	int iPositionY = 0;
+	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
+		return;
+
+	// Check if player is standing on the entrance door (not exit) and pressed 'E'
+	if (pMap2D->IsEntranceDoor(iPositionX, iPositionY) && pKeyboardController->IsKeyPressed(GLFW_KEY_ENTER)) {
+		pMap2D->SetAreDoorsUsed(true);
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+		// Teleport to exit door
+		glm::ivec2 exitPos = pMap2D->GetExitDoorPos();
+		pMap2D->SetMapInfo(exitPos.y, exitPos.x, 0);
+		vec2Position = glm::vec2((exitPos.x + 0.5f) * 25.f, (exitPos.y + 0.5f) * 25.f); // Center player
+	}
 }

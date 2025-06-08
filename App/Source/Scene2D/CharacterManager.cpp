@@ -1,4 +1,6 @@
 #include "CharacterManager.h"
+#include "Player2D.h"
+#include "Topdee.h"
 
 CharacterManager::CharacterManager() : activeCharacter(NULL), toodee(NULL), topdee(NULL), savedToodeeState(NULL), savedTopdeeState(NULL)
 {
@@ -59,11 +61,11 @@ void CharacterManager::SwitchCharacter()
     // 1. Save current character's state
     if (activeCharacter == topdee) {
         delete savedTopdeeState;  // Delete old state if exists
-        savedTopdeeState = new CTopdee::TopdeeState(topdee->SaveState());
+        savedTopdeeState = new TopdeeState(topdee->SaveState());
     }
     else {  
         delete savedToodeeState;
-        savedToodeeState = new CPlayer2D::ToodeeState(toodee->SaveState());
+        savedToodeeState = new ToodeeState(toodee->SaveState());
     }
 
     // 2. Switch active character
@@ -99,6 +101,12 @@ void CharacterManager::ResetAllCharacters() {
 void CharacterManager::DeactivateAllCharacters() {
     topdee->SetStatus(false);
     toodee->SetStatus(false);
+}
+
+bool CharacterManager::ShouldEndGame()
+{
+    if (topdee->IsAtExit() && toodee->IsAtExit())
+        return true;
 }
 
 CEntity2D* CharacterManager::GetTopdee()

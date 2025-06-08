@@ -100,5 +100,8 @@
     <ClInclude Include="Source\Scene2D\Topdee.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Scene2D\CharacterStates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

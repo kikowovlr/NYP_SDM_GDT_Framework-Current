@@ -164,7 +164,7 @@ bool CGUI_Scene2D::Update(const double dElapsedTime)
 	ImGui::End();
 
 	// Render the inventory items
-	pInventoryItem = pInventoryManager->GetItem("Tree");
+	pInventoryItem = pInventoryManager->GetItem("Orb");
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));  // Set a background colour
 	ImGuiWindowFlags inventoryWindowFlags = ImGuiWindowFlags_AlwaysAutoResize |
 		ImGuiWindowFlags_NoTitleBar |
@@ -180,7 +180,7 @@ bool CGUI_Scene2D::Update(const double dElapsedTime)
 		ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::SameLine();
 	ImGui::SetWindowFontScale(1.5f * relativeScale_y);
-	ImGui::TextColored(ImVec4(1, 1, 0, 1), "Tree: %d / %d",
+	ImGui::TextColored(ImVec4(1, 1, 0, 1), "Orb: %d / %d",
 		pInventoryItem->GetCount(), pInventoryItem->GetMaxCount());
 	ImGui::End();
 	ImGui::PopStyleColor();

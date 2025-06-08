@@ -72,8 +72,6 @@ protected:
 
 	// The handler containing the instance of the 2D Map
 	CMap2D* pMap2D;
-	//// The handler containing the instance of CPlayer2Ds
-	//CPlayer2D* pPlayer2D;
 	CharacterManager* pCharacterManager;
 
 	// Keyboard Controller singleton instance

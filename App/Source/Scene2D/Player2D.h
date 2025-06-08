@@ -48,6 +48,9 @@
 // Include InventoryManager
 #include "InventoryManager.h"
 
+#include "CharacterManager.h"
+#include "CharacterStates.h"
+
 class CPlayer2D : public CSingletonTemplate<CPlayer2D>, public CEntity2D
 {
 	friend CSingletonTemplate<CPlayer2D>;
@@ -71,24 +74,15 @@ public:
 	// PostRender
 	void PostRender(void);
 
-	// save character state
-	struct ToodeeState {
-		// Physics
-		glm::vec2 position;
-		glm::vec2 velocity;
-
-		glm::vec4 colourTint;  // For visual effects
-		bool isActive;         // bStatus
-
-		//// Character-specific
-		//float abilityCooldown;  // Example: TopDee's dash cooldown
-		//bool isFacingRight;
-	};
-
 	ToodeeState SaveState() const;
 	void LoadState(const ToodeeState& state);
 
+	bool IsGunPicked() const;
+	bool IsAtExit() const;
+
 	void Respawn() override;
+
+	void InteractWithDoors();
 
 protected:
 	// Constructor
@@ -99,9 +93,22 @@ protected:
 
 	// Let player interact with the map
 	void InteractWithMap(void);
+	
+	void UnlockChest(void);
+	void LockChest(void);
+
+	void UpdateWallDetection(const double dElapsedTime);
+
+	bool IsWallAttached() const;
+
+	bool IsGrounded();
+
+	bool CanWallJump();
+
+	void CheckDeath();
 
 	// Constant variable for jump speed
-	const glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 300.0f);
+	const glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 210.0f);
 	// Constant variable for walk speed
 	const glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
 	glm::vec2 vec2WalkSpeedMultiplier = glm::vec2(2.f, 2.f);
@@ -137,7 +144,10 @@ protected:
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
 
+	CharacterManager* pCharacterManager;
+
 	bool isGunPicked;
+	bool isKeyPicked = false;
 
 	enum class FacingDirection
 	{
@@ -146,5 +156,18 @@ protected:
 	};
 
 	FacingDirection eFacingDirection = FacingDirection::RIGHT;
-};
 
+	// for wall jumping
+	const float WALL_DETECT_OFFSET = 5.f;
+	const float WALL_JUMP_VERTICAL = 250.f;
+	const float WALL_JUMP_HORIZONTAL = 60.f;
+
+	bool m_bWallJumpCooldown = false;
+	const float WALL_JUMP_COOLDOWN_TIME = 2.f;
+	float m_fWallJumpCooldownTimer = 0.0f;
+
+	bool isAtExit = false;
+	bool m_bHasDoubleJumped = false;
+
+	glm::ivec2 keyPos = glm::ivec2(9, 6);
+};
