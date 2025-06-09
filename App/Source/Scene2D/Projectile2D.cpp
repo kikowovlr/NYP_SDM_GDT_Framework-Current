@@ -282,7 +282,7 @@ void CProjectile2D::InteractWithPorts()
 	int iPositionY = 0;
 
 	// Calculate the tile in the direction the projectile was headed
-	glm::vec2 nextTilePos = vec2Position + glm::normalize(vec2Direction) * 1.0f; // 1.0f or tile size (25.0f)
+	glm::vec2 nextTilePos = vec2Position + glm::normalize(vec2Direction) * 5.0f; // 1.0f or tile size (25.0f)
 
 	if (pMap2D->GetTileIndexAtPosition(nextTilePos, iPositionX, iPositionY) == false)
 		return;

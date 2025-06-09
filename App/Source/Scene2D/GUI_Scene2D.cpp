@@ -193,26 +193,26 @@ bool CGUI_Scene2D::Update(const double dElapsedTime)
 		ImGui::ShowDemoWindow(&show_demo_window);
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-	{
-		static float f = 0.0f;
-		static int counter = 0;
-		// Create a window called "Preview IMGUI" and append into it.
-		ImGui::Begin("Preview IMGUI", NULL);
-		ImGui::SetWindowPos(ImVec2(10.0f, 10.0f)); // Set the top-left of the window at (10,10)
-		ImGui::SetWindowSize(ImVec2(300.0f, 200.0f)); // Set the window size to (300,200)
-		ImGui::Text("Toggle IMGUI demo."); // Display some text (you can use a format strings too)
-		ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-		ImGui::Checkbox("Another Window", &show_another_window);
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-		if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited / activated)
-			counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-				1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::End();
-	}
+	//{
+	//	static float f = 0.0f;
+	//	static int counter = 0;
+	//	// Create a window called "Preview IMGUI" and append into it.
+	//	ImGui::Begin("Preview IMGUI", NULL);
+	//	ImGui::SetWindowPos(ImVec2(10.0f, 10.0f)); // Set the top-left of the window at (10,10)
+	//	ImGui::SetWindowSize(ImVec2(300.0f, 200.0f)); // Set the window size to (300,200)
+	//	ImGui::Text("Toggle IMGUI demo."); // Display some text (you can use a format strings too)
+	//	ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+	//	ImGui::Checkbox("Another Window", &show_another_window);
+	//	ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
+	//	ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+	//	if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited / activated)
+	//		counter++;
+	//		ImGui::SameLine();
+	//		ImGui::Text("counter = %d", counter);
+	//		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+	//			1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	//		ImGui::End();
+	//}
 
 	// 3. Show another simple window.
 	if (show_another_window)

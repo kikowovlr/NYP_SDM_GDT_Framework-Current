@@ -384,26 +384,26 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Update the vec2Position with the new position
 	vec2Position = vec2NewPosition;
 
-	// shooting mechanic
-	if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
-	{
-		pInventoryManager->BindToCharacter(this);
-		pInventoryItem = pInventoryManager->GetItem("Energy");
-		if (isGunPicked && pInventoryItem->GetCount() >= 10) // only shoot if player has 10 or more energy and has gun
+		// shooting mechanic
+		if (pMouseController->IsButtonPressed(0) /*left mouse button*/ && cShootStatus.IsAbleToShoot())
 		{
-			glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
-				CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
-				pMouseController->GetMousePositionY() - vec2Position.y));
-			// Activate a CProjectil2D
-			pProjectileManager2D->Activate(vec2Position,
-				temp, 2.0, 200.0f, this);
+			pInventoryManager->BindToCharacter(this);
+			pInventoryItem = pInventoryManager->GetItem("Energy");
+			if (isGunPicked && pInventoryItem->GetCount() >= 10) // only shoot if player has 10 or more energy and has gun
+			{
+				glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
+					CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -
+					pMouseController->GetMousePositionY() - vec2Position.y));
+				// Activate a CProjectil2D
+				pProjectileManager2D->Activate(vec2Position,
+					temp, 2.0, 200.0f, this);
 
-			// remove energy from inventory every time a bullet is shot
-			pInventoryItem->Remove(10);
+				// remove energy from inventory every time a bullet is shot
+				pInventoryItem->Remove(10);
 
-			cShootStatus.SetToCannotShoot();
+				cShootStatus.SetToCannotShoot();
+			}
 		}
-	}
 	else
 	{
 		cShootStatus.Update(dElapsedTime);

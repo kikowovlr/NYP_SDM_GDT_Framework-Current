@@ -62,7 +62,7 @@ public:
 	// PostRender
 	void PostRender(void);
 
-	void DisplayColourPicker(void);
+	//void DisplayColourPicker(void);
 
 protected:
 	// Constructor
@@ -87,5 +87,5 @@ protected:
 
 	bool show_demo_window = false;
 	bool show_another_window = false;
-	bool clear_color = true;
+	bool clear_color = false;
 };
