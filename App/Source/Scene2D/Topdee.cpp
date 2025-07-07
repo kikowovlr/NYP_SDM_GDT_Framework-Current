@@ -153,6 +153,8 @@ bool CTopdee::Init(void)
 
 	pCharacterManager = CharacterManager::GetInstance();
 
+	SetName("TOPDEE");
+
 	return true;
 }
 

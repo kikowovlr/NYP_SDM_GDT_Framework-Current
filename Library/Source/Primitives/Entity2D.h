@@ -69,6 +69,9 @@ public:
 
 	virtual void Respawn();
 
+	void SetName(const std::string& name) { this->name = name; }
+	std::string GetName() const { return name; }
+
 protected:
 	// Name of Shader Program instance
 	std::string sShaderName;
@@ -96,4 +99,6 @@ protected:
 	// Boolean flag to indicate if this CEntity3D is active
 	// true == active, false == inactive
 	bool bStatus;
+
+	std::string name = "Unnamed Entity";
 };

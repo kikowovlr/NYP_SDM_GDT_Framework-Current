@@ -226,7 +226,7 @@ void CInventoryManager::BindToCharacter(CEntity2D* character)
 	}
 }
 
-void CInventoryManager::DebugPrintAllInventories(CEntity2D* topdee, CEntity2D* toodee) const
+void CInventoryManager::DebugPrintAllInventories() const
 {
 	std::cout << "\n=== INVENTORY DEBUG REPORT ===" << std::endl;
 
@@ -240,8 +240,15 @@ void CInventoryManager::DebugPrintAllInventories(CEntity2D* topdee, CEntity2D* t
 	}
 
 	// Character Inventories
-	DebugPrintCharacterInventory(topdee, "TOPDEE");
-	DebugPrintCharacterInventory(toodee, "TOODEE");
+	std::cout << "\n[CHARACTER INVENTORIES]" << std::endl;
+	for (auto it = characterInventories.begin(); it != characterInventories.end(); ++it)
+	{
+		CEntity2D* entity = it->first;
+		const auto& inventory = it->second;
+
+		std::string charName = entity ? entity->GetName() : "NULL Entity";
+		DebugPrintCharacterInventory(entity, charName);
+	}
 }
 
 void CInventoryManager::DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const

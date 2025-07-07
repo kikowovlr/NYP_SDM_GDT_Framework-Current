@@ -162,6 +162,9 @@ bool CPlayer2D::Init(void)
 
 	pCharacterManager = CharacterManager::GetInstance();
 
+	SetName("TOODEE");
+
+
 	return true;
 }
 

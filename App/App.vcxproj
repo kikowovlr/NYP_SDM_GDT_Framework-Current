@@ -14,6 +14,8 @@
     <ClCompile Include="Source\Scene2D\CharacterManager.cpp" />
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Scene2D\Enemy2D.cpp" />
+    <ClCompile Include="Source\Scene2D\Enemy2DManager.cpp" />
     <ClCompile Include="Source\Scene2D\GameManager.cpp" />
     <ClCompile Include="Source\Scene2D\GUI_Scene2D.cpp" />
     <ClCompile Include="Source\Scene2D\InventoryItem.cpp" />
@@ -30,6 +32,8 @@
     <ClInclude Include="Source\Scene2D\CharacterStates.h" />
     <ClInclude Include="Source\Scene2D\CharacterManager.h" />
     <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\Scene2D\Enemy2D.h" />
+    <ClInclude Include="Source\Scene2D\Enemy2DManager.h" />
     <ClInclude Include="Source\Scene2D\GameManager.h" />
     <ClInclude Include="Source\Scene2D\GUI_Scene2D.h" />
     <ClInclude Include="Source\Scene2D\InventoryItem.h" />
