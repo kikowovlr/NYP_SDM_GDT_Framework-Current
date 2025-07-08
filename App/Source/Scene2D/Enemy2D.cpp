@@ -39,7 +39,7 @@ CEnemy2D::CEnemy2D(void)
 	, pMap2D(NULL)
 	, pPlayer2D(NULL)
 	, sCurrentFSM(FSM::IDLE)
-	, iFSMCounter(0)
+	//, iFSMCounter(0)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
 {
@@ -139,6 +139,8 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	if (!bIsActive)
 		return false;
 
+	int currHealth = pInventoryManager->GetItem("Health")->GetCount();
+
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
 	// Set the physics horizontal status to idle
@@ -148,25 +150,41 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	switch (sCurrentFSM)
 	{
 	case IDLE:
-		if (iFSMCounter > iMaxFSMCounter)
+		if (currHealth <= 30)
+		{
+			// if health drops to 30% and below, enter ESCAPE mode
+			sCurrentFSM = ESCAPE;
+			stateTimer = 0.0f;
+			cout << "Switching to Escape State" << endl;
+		}
+		else if (stateTimer > maxStateTime)
 		{
 			sCurrentFSM = PATROL;
-			iFSMCounter = 0;
+			stateTimer = 0.0f;
+
 			cout << "Switching to Patrol State" << endl;
 		}
-		iFSMCounter++;
+		stateTimer += dElapsedTime;
 		break;
 	case PATROL:
-		if (iFSMCounter > iMaxFSMCounter)
+		if (currHealth <= 30)
+		{
+			// if health drops to 30% and below, enter ESCAPE mode
+			sCurrentFSM = ESCAPE;
+			stateTimer = 0.0f;
+			cout << "Switching to Escape State" << endl;
+		}
+		else if (stateTimer > maxStateTime)
 		{
 			sCurrentFSM = IDLE;
-			iFSMCounter = 0;
+			stateTimer = 0.0f;
 			cout << "Switching to Idle State" << endl;
 		}
 		else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
 		{
  			sCurrentFSM = ATTACK;
-			iFSMCounter = 0;
+			stateTimer = 0.0f;
+			cout << "Switching to Attack State" << endl;
 		}
 		else
 		{
@@ -174,10 +192,17 @@ bool CEnemy2D::Update(const double dElapsedTime)
 			// Update the Enemy2D's position for patrol
 			UpdatePosition();
 		}
-		iFSMCounter++;
+		stateTimer += dElapsedTime;
 		break;
 	case ATTACK:
-		if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
+		if (currHealth <= 30)
+		{
+			// if health drops to 30% and below, enter ESCAPE mode
+			sCurrentFSM = ESCAPE;
+			stateTimer = 0.0f;
+			cout << "Switching to Escape State" << endl;
+		}
+		else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
 		{
 			int iStartX = 0;
 			int iStartY = 0;
@@ -244,14 +269,20 @@ bool CEnemy2D::Update(const double dElapsedTime)
 		}
 		else
 		{
-			if (iFSMCounter > iMaxFSMCounter)
+			if (stateTimer > maxStateTime)
 			{
 				sCurrentFSM = PATROL;
-				iFSMCounter = 0;
-				cout << "ATTACK : Reset counter: " << iFSMCounter << endl;
+				stateTimer = 0.0f;
+				cout << "ATTACK : Reset timer: " << stateTimer << endl;
 			}
-			iFSMCounter++;
+			stateTimer += dElapsedTime;
 		}
+		break;
+	case ESCAPE:
+		// Move to health pack item
+
+		cout << "Moving to health pack" << endl;
+		stateTimer += dElapsedTime;
 		break;
 	default:
 		break;
@@ -349,6 +380,9 @@ bool CEnemy2D::Update(const double dElapsedTime)
 
 	// Interact with the Player
 	InteractWithPlayer();
+
+	// Interact with the Map
+	InteractWithMap();
 
 	// Update the model
 	model = glm::mat4(1.0f);
@@ -450,11 +484,35 @@ bool CEnemy2D::InteractWithPlayer(void)
 		pInventoryItem->Remove(20);
 		// Since the player has been caught, then reset the FSM
 		sCurrentFSM = IDLE;
-		iFSMCounter = 0;
+		stateTimer = 0.0f;
 		return true;
 	}
 
 	return false;
+}
+
+void CEnemy2D::InteractWithMap() 
+{
+	int iPositionX = 0;
+	int iPositionY = 0;
+	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
+		return;
+
+	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
+	{
+	case 21: // health pack
+		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+		// Increase the health
+		pInventoryItem = pInventoryManager->GetItem("Health");
+		pInventoryItem->Add(20);
+		break;
+	case 28: // spike
+		pInventoryItem = pInventoryManager->GetItem("Health");
+		pInventoryItem->Remove(1);
+		break;
+	default:
+		break;
+	}
 }
 
 /**

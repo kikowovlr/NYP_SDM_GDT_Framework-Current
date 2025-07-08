@@ -109,14 +109,21 @@ protected:
 	// Current FSM
 	FSM sCurrentFSM;
 
-	// FSM counter - count how many frames it has been in this FSM
-	int iFSMCounter;
+	//// FSM counter - count how many frames it has been in this FSM
+	//int iFSMCounter;
 
-	// Max count in a state
-	const int iMaxFSMCounter = 60;
+	//// Max count in a state
+	//const int iMaxFSMCounter = 60;
+
+	// track how long has it been in this FSM
+	float stateTimer = 0.0f;
+	float maxStateTime = 4.0f; // 4 seconds
 
 	// Let enemy2D interact with the player
 	bool InteractWithPlayer(void);
+
+	// Let enemy2D interact with the map
+	void InteractWithMap();
 
 	// Update direction
 	void UpdateDirection(void);
