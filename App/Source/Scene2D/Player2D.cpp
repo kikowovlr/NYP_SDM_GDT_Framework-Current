@@ -33,6 +33,7 @@ CPlayer2D::CPlayer2D(void)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
 	, pCharacterManager(NULL)
+	, pSoundController(NULL)
 	, isGunPicked(false)
 {
 	// Initialise position of the player
@@ -60,6 +61,8 @@ CPlayer2D::~CPlayer2D(void)
 	pInventoryManager = NULL;
 
 	pCharacterManager = NULL;
+
+	pSoundController = NULL;
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	glDeleteVertexArrays(1, &VAO);
@@ -162,8 +165,9 @@ bool CPlayer2D::Init(void)
 
 	pCharacterManager = CharacterManager::GetInstance();
 
-	SetName("TOODEE");
+	pSoundController = CSoundController::GetInstance();
 
+	SetName("TOODEE");
 
 	return true;
 }
@@ -270,6 +274,8 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Handle ALL jump types in one place (priority order: Wall Jump > Ground Jump > Double Jump)
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
 	{
+		pSoundController->PlaySoundByID(3);
+
 		// 1. Wall Jump (highest priority)
 		if (CanWallJump()) {
 			float horizontalDir = (cPhysics2D.GetWallJumpStatus() == CPhysics2D::WALLJUMPSTATUS::LEFT_WALL) ? 1.0f : -1.0f;
@@ -563,6 +569,7 @@ void CPlayer2D::InteractWithMap(void)
 	{
 	case 2: // orb
 		// Erase the orb from this position
+		pSoundController->PlaySoundByID(1);
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the Orb by 1
 		pInventoryItem = pInventoryManager->GetItem("Orb");

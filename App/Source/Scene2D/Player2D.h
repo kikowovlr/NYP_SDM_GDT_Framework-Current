@@ -51,6 +51,8 @@
 #include "CharacterManager.h"
 #include "CharacterStates.h"
 
+#include "..\SoundController\SoundController.h"
+
 class CPlayer2D : public CSingletonTemplate<CPlayer2D>, public CEntity2D
 {
 	friend CSingletonTemplate<CPlayer2D>;
@@ -145,6 +147,8 @@ protected:
 	CInventoryItem* pInventoryItem;
 
 	CharacterManager* pCharacterManager;
+
+	CSoundController* pSoundController;
 
 	bool isGunPicked;
 	bool isKeyPicked = false;

@@ -51,6 +51,8 @@
 #include "CharacterManager.h"
 #include "CharacterStates.h"
 
+#include "..\SoundController\SoundController.h"
+
 class CTopdee : public CSingletonTemplate<CTopdee>, public CEntity2D
 {
 	friend CSingletonTemplate<CTopdee>;
@@ -129,6 +131,8 @@ protected:
 	CInventoryItem* pInventoryItem;
 
 	CharacterManager* pCharacterManager;
+
+	CSoundController* pSoundController;
 
 	bool isAtExit = false;
 };

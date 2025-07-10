@@ -26,6 +26,7 @@ CScene2D::CScene2D(void)
 	, pProjectileManager2D(NULL)
 	, pGUI_Scene2D(NULL)
 	, pGameManager(NULL)
+	, pSoundController(NULL)
 {
 }
 
@@ -75,6 +76,12 @@ CScene2D::~CScene2D(void)
 		pGameManager->Destroy();
 		pGameManager = NULL;
 	}
+	if (pSoundController)
+	{
+		pSoundController->DeInit();
+		pSoundController = NULL;
+	}
+
 	// Clear out all the shaders
 	//CShaderManager::GetInstance()->Destroy();
 }
@@ -172,6 +179,14 @@ bool CScene2D::Init(void)
 		glm::ivec2(19, 5)   // Exit door pos
 	);
 
+	// Load the sounds into SoundController
+	pSoundController = CSoundController::GetInstance();
+	pSoundController->Init();
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Bell.ogg"), 1, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Explosion.ogg"), 2, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Jump.ogg"), 3, true);
+
+
 	return true;
 }
 
@@ -245,6 +260,7 @@ bool CScene2D::Update(const double dElapsedTime)
 	// Check if the game should be ended
 	else if (pGameManager->bPlayerLost == true)
 	{
+		pSoundController->PlaySoundByID(2);
 		pCharacterManager->DeactivateAllCharacters();
 		return false; // closes the app
 	}

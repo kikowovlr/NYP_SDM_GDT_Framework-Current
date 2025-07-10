@@ -48,6 +48,9 @@
 // Include CEnemy2DManager
 #include "Enemy2DManager.h"
 
+// Include CSoundController
+#include "..\SoundController\SoundController.h"
+
 class CScene2D : public CSingletonTemplate<CScene2D>
 {
 	friend CSingletonTemplate<CScene2D>;
@@ -90,5 +93,8 @@ protected:
 
 	// The handler containing the instance of CEnemy2DManager
 	CEnemy2DManager* pEnemy2DManager;
+
+	// Handle to the CSoundController
+	CSoundController* pSoundController;
 };
 

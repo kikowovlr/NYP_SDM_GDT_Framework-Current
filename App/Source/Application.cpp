@@ -33,6 +33,9 @@ CScene2D* pScene2D = NULL;
 // Include filesystem
 #include "System\filesystem.h"
 
+// Include SoundController
+#include "SoundController/SoundController.h"
+
 /**
  @brief Define an error callback
  @param error The error code
@@ -266,6 +269,20 @@ bool Application::Init(void)
 	{
 		cout << "Application::Init() - Unable to initialise Cscene2D";
 		return false;
+	}
+
+	// Init the CSoundController singleton
+	if (CSoundController::GetInstance()->Init() == false)
+	{
+		// Destroy the CSoundController singleton
+		cout << "Failed to initialise CSoundController class instance." << endl;
+
+		// Destroy the cScene3D instance
+		if (pScene2D)
+		{
+			pScene2D->Destroy();
+			pScene2D = NULL;
+		}
 	}
 
 	return true;

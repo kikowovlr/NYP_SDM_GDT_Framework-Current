@@ -32,6 +32,7 @@ CTopdee::CTopdee(void)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
 	, pCharacterManager(NULL)
+	, pSoundController(NULL)
 {
 	// Initialise position of the player
 	vec2Position = glm::vec2(0);
@@ -58,6 +59,8 @@ CTopdee::~CTopdee(void)
 	pInventoryManager = NULL;
 
 	pCharacterManager = NULL;
+
+	pSoundController = NULL;
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	glDeleteVertexArrays(1, &VAO);
@@ -152,6 +155,8 @@ bool CTopdee::Init(void)
 	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
 
 	pCharacterManager = CharacterManager::GetInstance();
+
+	pSoundController = CSoundController::GetInstance();
 
 	SetName("TOPDEE");
 
@@ -465,8 +470,6 @@ void CTopdee::InteractWithMap(void)
 		break;
 	}
 }
-
-
 
 glm::ivec2 CTopdee::GetFacingDirection()
 {
