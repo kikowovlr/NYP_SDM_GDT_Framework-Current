@@ -274,7 +274,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Handle ALL jump types in one place (priority order: Wall Jump > Ground Jump > Double Jump)
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
 	{
-		pSoundController->PlaySoundByID(3);
+		//pSoundController->PlaySoundByID(3);
 
 		// 1. Wall Jump (highest priority)
 		if (CanWallJump()) {
@@ -569,7 +569,7 @@ void CPlayer2D::InteractWithMap(void)
 	{
 	case 2: // orb
 		// Erase the orb from this position
-		pSoundController->PlaySoundByID(1);
+		//pSoundController->	ByID(1);
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the Orb by 1
 		pInventoryItem = pInventoryManager->GetItem("Orb");

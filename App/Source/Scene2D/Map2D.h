@@ -24,6 +24,8 @@
 #include "System/rapidcsv.h"
 // Include map storage
 #include <map>
+#include <queue>
+#include <functional>
 
 // Include Settings
 #include "GameControl\Settings.h"
@@ -56,6 +58,17 @@ struct Grid {
 	unsigned int g;
 	unsigned int h;
 };
+
+using HeuristicFunction =
+std::function<unsigned int(const glm::vec2&, const glm::vec2&, int)>;
+// Reverse std::priority_queue to get the largest f value on top
+inline bool operator< (const Grid& a, const Grid& b) { return b.f < a.f; }
+
+namespace heuristic
+{
+	unsigned int manhattan(const glm::vec2& v1, const glm::vec2& v2, int weight);
+	unsigned int euclidean(const glm::vec2& v1, const glm::vec2& v2, int weight);
+}
 
 class CMap2D : public CSingletonTemplate<CMap2D>, public CEntity2D
 {
@@ -128,6 +141,15 @@ public:
 	void SetCurrentLevel(unsigned int uiCurLevel);
 	// Get current level
 	unsigned int GetCurrentLevel(void) const;
+
+	// For AStar PathFinding
+	std::vector<glm::vec2> PathFind(const glm::vec2& startPos,
+									const glm::vec2& targetPos,
+									HeuristicFunction heuristicFunc,
+									const int weight = 1);
+
+	// Set if AStar PathFinding will consider diagonal movements
+	void SetDiagonalMovement(const bool bEnable);
 
 	// Print out details about this class instance in the console window
 	void PrintSelf(void) const;
@@ -208,6 +230,38 @@ protected:
 
 	// Render a tile
 	void RenderTile(const unsigned int uiRow, const unsigned int uiCol);
+
+	// For A-Star PathFinding
+	// Build a path from vCameFromList after calling PathFind()
+	std::vector<glm::vec2> BuildPath() const;
+	// Check if a grid is valid
+	bool isValid(const glm::vec2& pos) const;
+	// Check if a grid is blocked
+	bool isBlocked(const unsigned int uiRow,
+		const unsigned int uiCol,
+		const bool bInvert = true) const;
+	// Convert a position to a 1D position in the array
+	int ConvertTo1D(const glm::vec2& pos) const;
+
+	// Delete AStar lists
+	bool DeleteAStarLists(void);
+	// Reset AStar lists
+	bool ResetAStarLists(void);
+
+	// Variables for A-Star PathFinding
+	int iWeight;
+	unsigned int iNumDirections;
+	glm::vec2 vec2StartPos;
+	glm::vec2 vec2TargetPos;
+
+	// The handle for heuristic functions
+	HeuristicFunction m_heuristic;
+
+	// Lists for A-Star PathFinding
+	std::priority_queue<Grid> pqOpenList;
+	std::vector<bool> vClosedList;
+	std::vector<Grid> vCameFromList;
+	std::vector<glm::vec2> vDirections;
 
 	// port logic
 	struct BlockReset {

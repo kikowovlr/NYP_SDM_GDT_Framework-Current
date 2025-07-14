@@ -204,6 +204,8 @@ bool CEnemy2D::Update(const double dElapsedTime)
 		}
 		else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
 		{
+			// Attack
+			// find a way to calculate only when the enemy reaches the first grid, then recalculate!!
 			int iStartX = 0;
 			int iStartY = 0;
 			int iTargetX = 0;
@@ -222,40 +224,45 @@ bool CEnemy2D::Update(const double dElapsedTime)
 					break;
 				}
 
-				//// Calculate a path to the player
-				//auto path = pMap2D->PathFind(	glm::vec2(iStartX, iStartY), 
-				//								glm::vec2(iTargetX, iTargetY),
-				//								heuristic::euclidean,
-				//								10);
+				// Calculate a path to the player
+				//pMap2D->PrintSelf();
+				//cout << "StartPos: " << iStartX << ", " << iStartY << endl;
+				//cout << "TargetPos: " << iTargetX << ", " << iTargetY << endl;
+				auto path = pMap2D->PathFind(	glm::vec2(iStartX, iStartY), 
+												glm::vec2(iTargetX, iTargetY),
+												heuristic::euclidean,
+												10);
 
-				////cout << "=== Printing out the path ===" << endl;
-				//// Calculate new destination
-				//bool bFirstPosition = true;
-				//glm::vec2 vec2PathPoint;
-				//for (const auto& coord : path)
-				//{
-				//	// Take a path point from path via coord
-				//	vec2PathPoint = coord;
-				//	if (bFirstPosition == true)
-				//	{
-				//		// Set a destination
-				//		vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
-				//		// Calculate the direction between enemy2D and this destination
-				//		vec2Direction = glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY));
-				//		bFirstPosition = false;
-				//	}
-				//	else
-				//	{
-				//		// If the next path point is in the same direction, use it as the new vec2Destination
-				//		if (glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY)) == vec2Direction)
-				//		{
-				//			// Set a destination
-				//			vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
-				//		}
-				//		else
-				//			break;
-				//	}
-				//}
+				//cout << "=== Printing out the path ===" << endl;
+
+				// extract points and determine dir for the enemy to travel towards
+				// Calculate new destination
+				bool bFirstPosition = true;
+				glm::vec2 vec2PathPoint;
+				for (const auto& coord : path)
+				{
+					// Take a path point from path via coord
+					vec2PathPoint = coord;
+					if (bFirstPosition == true)
+					{	
+						// Set a destination
+						vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
+						// Calculate the direction between enemy2D and this destination
+						vec2Direction = glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY));
+						bFirstPosition = false;
+					}
+					else
+					{
+						// If the next path point is in the same direction, use it as the new vec2Destination
+						if (glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY)) == vec2Direction)
+						{
+							// Set a destination
+							vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
+						}
+						else
+							break;
+					}
+				}
 
 				//cout << "vec2Destination : " << vec2Destination.x 
 				//		<< ", " << vec2Destination.y << endl;

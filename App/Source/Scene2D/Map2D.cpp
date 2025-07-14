@@ -62,6 +62,9 @@ CMap2D::~CMap2D(void)
 
 	// Set this to NULL since it was created elsewhere, so we let it be deleted there.
 	pSettings = NULL;
+
+	// Delete AStar lists
+	DeleteAStarLists();
 }
 
 /**
@@ -306,6 +309,23 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 		// Store the texture ID into MapOfTextureIDs
 		MapOfTextureIDs.insert(pair<int, int>(99, iTextureID));
 	}
+
+	// Initialise the variables for AStar
+	iWeight = 1;
+	vec2StartPos = glm::vec2(0, 0);
+	vec2TargetPos = glm::vec2(0, 0);
+	//m_size = pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24)* pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32);
+
+	iNumDirections = 4;
+	vDirections = { { -1, 0 }, { 1, 0 }, { 0, 1 }, { 0, -1 },
+						{ -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
+
+	// Resize these 2 lists
+	vCameFromList.resize(pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24) * pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32));
+	vClosedList.resize(pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24) * pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32), false);
+
+	//// Clear AStar memory
+	//ClearAStar();
 
 	return true;
 }
@@ -724,6 +744,12 @@ void CMap2D::PrintSelf(void) const
 			}
 		}
 	}
+
+	cout << "pqOpenList: " << pqOpenList.size() << endl;
+	cout << "vCameFromList: " << vCameFromList.size() << endl;
+	cout << "vClosedList: " << vClosedList.size() << endl;
+
+	cout << "===== AStar::PrintSelf() =====" << endl;
 }
 
 /**
@@ -990,6 +1016,254 @@ CSettings::RESULTS CMap2D::CheckHorizontalCollision(glm::vec2 vec2StartPosition,
 	}
 
 	return CSettings::RESULTS::NEGATIVE;
+}
+
+/**
+ @brief Find a path
+ */
+std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
+	const glm::vec2& targetPos,
+	HeuristicFunction heuristicFunc,
+	const int weight)
+{
+	// Check if the startPos and targetPost are blocked
+	if (isBlocked((unsigned int)startPos.y, (unsigned int)startPos.x) ||
+		(isBlocked((unsigned int)targetPos.y, (unsigned int)targetPos.x)))
+	{
+		cout << "Invalid start or target position." << endl;
+		// Return an empty path
+		std::vector<glm::vec2> path;
+		return path;
+	}
+
+	// Set up the variables and lists
+	vec2StartPos = startPos;
+	vec2TargetPos = targetPos;
+	iWeight = weight;
+	m_heuristic = std::bind(heuristicFunc, _1, _2, _3);
+
+	// Reset AStar lists
+	ResetAStarLists();
+
+	// Add the start pos to 2 lists
+	vCameFromList[ConvertTo1D(vec2StartPos)].parent = vec2StartPos;
+	pqOpenList.push(Grid(vec2StartPos, 0));
+
+	unsigned int fNew, gNew, hNew;
+	glm::vec2 currentPos;
+
+	// Start the path finding...
+	while (!pqOpenList.empty())
+	{
+		// Get the node with the least f value
+		currentPos = pqOpenList.top().pos;
+		//cout << endl << "*** New position to check: " << currentPos.x << ", " << currentPos.y << endl;
+		//cout << "*** targetPos: " << vec2TargetPos.x << ", " << vec2TargetPos.y << endl;
+
+		// If the targetPos was reached, then quit this loop
+		if (currentPos == vec2TargetPos)
+		{
+			//cout << "=== Found the targetPos: " << vec2TargetPos.x << ", " << vec2TargetPos.y << endl;
+			while (pqOpenList.size() != 0)
+				pqOpenList.pop();
+			break;
+		}
+
+		pqOpenList.pop();
+		vClosedList[ConvertTo1D(currentPos)] = true;
+
+		// Check the neighbors of the current node
+		for (unsigned int i = 0; i < iNumDirections; ++i)
+		{
+			const auto neighborPos = currentPos + vDirections[i];
+			const auto neighborIndex = ConvertTo1D(neighborPos);
+
+			//cout << "\t#" << i << ": Check this: " << neighborPos.x << ", " << neighborPos.y << ":\t";
+			if (!isValid(neighborPos) ||
+				isBlocked((unsigned int)neighborPos.y, (unsigned int)neighborPos.x) ||
+				vClosedList[neighborIndex] == true)
+			{
+				//cout << "This position is not valid. Going to next neighbour." << endl;
+				continue;
+			}
+
+			gNew = vCameFromList[ConvertTo1D(currentPos)].g + 1;
+			hNew = m_heuristic(neighborPos, vec2TargetPos, iWeight);
+			fNew = gNew + hNew;
+
+			if (vCameFromList[neighborIndex].f == 0 || fNew < vCameFromList[neighborIndex].f)
+			{
+				//cout << "Adding to Open List: " << neighborPos.x << ", " << neighborPos.y;
+				//cout << ". [ f : " << fNew << ", g : " << gNew << ", h : " << hNew << "]" << endl;
+				pqOpenList.push(Grid(neighborPos, fNew));
+				vCameFromList[neighborIndex] = { neighborPos, currentPos, fNew, gNew, hNew };
+			}
+			else
+			{
+				//cout << "Not adding this" << endl;
+			}
+		}
+		//system("pause");
+	}
+
+	return BuildPath();
+}
+
+/**
+ @brief Build a path
+ extracts the points in the path from m_cameFromList
+ */
+std::vector<glm::vec2> CMap2D::BuildPath() const
+{
+	std::vector<glm::vec2> path;
+	auto currentPos = vec2TargetPos;
+	auto currentIndex = ConvertTo1D(currentPos);
+
+	while (!(vCameFromList[currentIndex].parent == currentPos))
+	{
+		path.push_back(currentPos);
+		currentPos = vCameFromList[currentIndex].parent;
+		currentIndex = ConvertTo1D(currentPos);
+	}
+
+	// If the path has only 1 entry, then it is the the target position
+	if (path.size() == 1)
+	{
+		// if vec2StartPos is next to vec2TargetPos, then having 1 path point is OK
+		if (iNumDirections == 4)
+		{
+			if (abs(vec2TargetPos.y - vec2StartPos.y) + abs(vec2TargetPos.x - vec2StartPos.x) > 1)
+				path.clear();
+		}
+		else
+		{
+			if (abs(vec2TargetPos.y - vec2StartPos.y) + abs(vec2TargetPos.x - vec2StartPos.x) > 2)
+				path.clear();
+			else if (abs(vec2TargetPos.y - vec2StartPos.y) + abs(vec2TargetPos.x - vec2StartPos.x) > 1)
+				path.clear();
+		}
+	}
+	else
+		std::reverse(path.begin(), path.end());
+
+	return path;
+}
+
+/**
+ @brief Toggle the checks for diagonal movements
+ decide if the algorithm will consider the diagonals as part of its calculation for the path
+ */
+void CMap2D::SetDiagonalMovement(const bool bEnable)
+{
+	iNumDirections = (bEnable) ? 8 : 4;
+}
+
+/**
+ @brief Check if a position is valid (if grid position is within map)
+ */
+bool CMap2D::isValid(const glm::vec2& pos) const
+{
+	return (pos.x >= 0) && (pos.x < pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32)) &&
+		(pos.y >= 0) && (pos.y < pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24));
+}
+
+/**
+ @brief Check if a grid is blocked (non-accessible e.g ground tile)
+ */
+bool CMap2D::isBlocked(const unsigned int uiRow, const unsigned int uiCol, const bool bInvert) const
+{
+	if (bInvert == true)
+	{
+		if ((arrMapInfo[uiCurLevel][pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24) - uiRow - 1][uiCol].value >= 100) &&
+			(arrMapInfo[uiCurLevel][pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24) - uiRow - 1][uiCol].value < 200))
+			return true;
+		else
+			return false;
+	}
+	else
+	{
+		if ((arrMapInfo[uiCurLevel][uiRow][uiCol].value >= 100) &&
+			(arrMapInfo[uiCurLevel][uiRow][uiCol].value < 200))
+			return true;
+		else
+			return false;
+	}
+}
+
+/**
+ @brief Returns a 1D index based on a 2D coordinate using row-major layout
+ @param pos A const glm::vec2& variable containing the position to convert to 1D
+ @return The int value containing the 1D value
+ use returned value to access the elements in two of the lists which are m_closedList and m_cameFromList
+ */
+int CMap2D::ConvertTo1D(const glm::vec2& pos) const
+{
+	//return (pos.y * m_dimensions.x) + pos.x;
+	return (int)((pos.y * pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32)) + pos.x);
+}
+
+/**
+ @brief Delete AStar lists & reset their sizes to 0
+ @return true is successfully delete the AStar Lists, otherwise false.
+ */
+bool CMap2D::DeleteAStarLists(void)
+{
+	// Delete pqOpenList
+	while (pqOpenList.size() != 0)
+		pqOpenList.pop();
+	// Delete vCameFromList
+	vCameFromList.clear();
+	// Delete vClosedList
+	vClosedList.clear();
+
+	return true;
+}
+
+/**
+ @brief Reset AStar lists but doesnt reset size
+ @return true is successfully reset the AStar Lists, otherwise false.
+ */
+bool CMap2D::ResetAStarLists(void)
+{
+	// Delete pqOpenList
+	while (pqOpenList.size() != 0)
+		pqOpenList.pop();
+	// Reset vCameFromList
+	for (int i = 0; i < (int)vCameFromList.size(); i++)
+	{
+		vCameFromList[i].pos = glm::vec2(0, 0);
+		vCameFromList[i].parent = glm::vec2(0, 0);
+		vCameFromList[i].f = 0;
+		vCameFromList[i].g = 0;
+		vCameFromList[i].h = 0;
+	}
+	// Reset vClosedList
+	for (int i = 0; i < (int)vClosedList.size(); i++)
+	{
+		vClosedList[i] = false;
+	}
+
+	return true;
+}
+
+/**
+ @brief manhattan calculation method for calculation of h
+ @return An unsigned int of the value of h
+ */
+unsigned int heuristic::manhattan(const glm::vec2& v1, const glm::vec2& v2, int weight)
+{
+	glm::vec2 delta = v2 - v1;
+	return static_cast<unsigned int>(weight * (delta.x + delta.y));
+}
+
+/**
+ @brief euclidean calculation method for calculation of h
+ @return An unsigned int of the value of h
+ */
+unsigned int heuristic::euclidean(const glm::vec2& v1, const glm::vec2& v2, int weight)
+{
+	glm::vec2 delta = v2 - v1;
+	return static_cast<unsigned int>(weight * sqrt((delta.x * delta.x) + (delta.y * delta.y)));
 }
 
 void CMap2D::ScheduleBlockReset(int x, int y)
