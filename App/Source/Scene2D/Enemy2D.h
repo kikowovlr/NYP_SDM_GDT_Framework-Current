@@ -136,5 +136,7 @@ protected:
 
 	// Calculate Direction using coordinates, not indices
 	glm::vec2 CalculateDirection(const glm::vec2 vec2StartPosition, const glm::vec2 vec2EndPosition);
+
+	double dElapsedTimeSinceLastPathFind = 0.f;
 };
 

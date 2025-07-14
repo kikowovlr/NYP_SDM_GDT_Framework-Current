@@ -1056,11 +1056,12 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 	while (!pqOpenList.empty())
 	{
 		// Get the node with the least f value
+		// a queue algorithm is attached to pqOpenList to get the lowest f value
 		currentPos = pqOpenList.top().pos;
 		//cout << endl << "*** New position to check: " << currentPos.x << ", " << currentPos.y << endl;
 		//cout << "*** targetPos: " << vec2TargetPos.x << ", " << vec2TargetPos.y << endl;
 
-		// If the targetPos was reached, then quit this loop
+		// If the targetPos was reached, then quit this loop -> SOLUTION FOUND! -> come out of loop
 		if (currentPos == vec2TargetPos)
 		{
 			//cout << "=== Found the targetPos: " << vec2TargetPos.x << ", " << vec2TargetPos.y << endl;
@@ -1079,7 +1080,7 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 			const auto neighborIndex = ConvertTo1D(neighborPos);
 
 			//cout << "\t#" << i << ": Check this: " << neighborPos.x << ", " << neighborPos.y << ":\t";
-			if (!isValid(neighborPos) ||
+			if (!isValid(neighborPos) || ]
 				isBlocked((unsigned int)neighborPos.y, (unsigned int)neighborPos.x) ||
 				vClosedList[neighborIndex] == true)
 			{
@@ -1091,6 +1092,7 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 			hNew = m_heuristic(neighborPos, vec2TargetPos, iWeight);
 			fNew = gNew + hNew;
 
+			// check if its getting us nearer to the target position
 			if (vCameFromList[neighborIndex].f == 0 || fNew < vCameFromList[neighborIndex].f)
 			{
 				//cout << "Adding to Open List: " << neighborPos.x << ", " << neighborPos.y;
@@ -1098,6 +1100,7 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 				pqOpenList.push(Grid(neighborPos, fNew));
 				vCameFromList[neighborIndex] = { neighborPos, currentPos, fNew, gNew, hNew };
 			}
+			// otherwise, do not add
 			else
 			{
 				//cout << "Not adding this" << endl;

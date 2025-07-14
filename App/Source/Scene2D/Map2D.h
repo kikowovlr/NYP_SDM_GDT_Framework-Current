@@ -61,7 +61,9 @@ struct Grid {
 
 using HeuristicFunction =
 std::function<unsigned int(const glm::vec2&, const glm::vec2&, int)>;
+
 // Reverse std::priority_queue to get the largest f value on top
+// when pqOpenList is made, it is auto sorted here to have the lowest f value at the start of the queue
 inline bool operator< (const Grid& a, const Grid& b) { return b.f < a.f; }
 
 namespace heuristic

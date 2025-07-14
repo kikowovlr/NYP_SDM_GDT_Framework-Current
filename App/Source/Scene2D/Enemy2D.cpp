@@ -232,6 +232,7 @@ bool CEnemy2D::Update(const double dElapsedTime)
 												glm::vec2(iTargetX, iTargetY),
 												heuristic::euclidean,
 												10);
+				dElapsedTimeSinceLastPathFind = 0.25f;
 
 				//cout << "=== Printing out the path ===" << endl;
 
@@ -273,6 +274,9 @@ bool CEnemy2D::Update(const double dElapsedTime)
 				// Update the Enemy2D's position for attack
 				UpdatePosition();
 			}
+
+			if (dElapsedTimeSinceLastPathFind < 0.25f)
+				dElapsedTimeSinceLastPathFind += dElapsedTime;
 		}
 		else
 		{
