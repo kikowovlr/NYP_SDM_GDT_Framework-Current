@@ -11,6 +11,8 @@
 // FPS Counter
 #include "TimeControl\FPSCounter.h"
 
+#include "MusicPlayer.h"
+
 struct GLFWwindow;
 
 class CSettings;
@@ -46,6 +48,8 @@ protected:
 	CSettings* pSettings;
 	// The handler to the CFPSCounter instance
 	CFPSCounter* pFPSCounter;
+	// The handler to the CMusicPlayer instance
+	CMusicPlayer* pMusicPlayer;
 	// Boolean flag to indicate fullscreen
 	bool bFullscreen;
 };

@@ -263,6 +263,11 @@ bool Application::Init(void)
 	pFPSCounter = CFPSCounter::GetInstance();
 	pFPSCounter->Init(true);
 
+	// Initialise the CMusicPlayer instance
+	pMusicPlayer = CMusicPlayer::GetInstance();
+	pMusicPlayer->Init();
+	//pMusicPlayer->AddMusic();
+
 	// Initialise CScene2D
 	pScene2D = CScene2D::GetInstance();
 	if (pScene2D->Init() == false)
@@ -348,6 +353,8 @@ void Application::Run(void)
 		// Update the FPS Counter
 		pFPSCounter->Update();
 
+		//pMusicPlayer->PlayMusicByID(1);
+
 		// Calculate the delta time since the last frame
 		dElapsedTime = pFPSCounter->GetDeltaTime();
 	}
@@ -380,6 +387,13 @@ void Application::Destroy(void)
 	{
 		pFPSCounter->Destroy();
 		pFPSCounter = NULL;
+	}
+
+	// Destroy the CMusicPlayer instance
+	if (pMusicPlayer)
+	{
+		pMusicPlayer->Destroy();
+		pMusicPlayer = NULL;
 	}
 
 	//Close OpenGL window and terminate GLFW

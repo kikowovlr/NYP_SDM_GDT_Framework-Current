@@ -1080,7 +1080,7 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 			const auto neighborIndex = ConvertTo1D(neighborPos);
 
 			//cout << "\t#" << i << ": Check this: " << neighborPos.x << ", " << neighborPos.y << ":\t";
-			if (!isValid(neighborPos) || ]
+			if (!isValid(neighborPos) || 
 				isBlocked((unsigned int)neighborPos.y, (unsigned int)neighborPos.x) ||
 				vClosedList[neighborIndex] == true)
 			{

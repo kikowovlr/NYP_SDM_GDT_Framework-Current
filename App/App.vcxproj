@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\MusicPlayer.cpp" />
     <ClCompile Include="Source\Scene2D\CharacterManager.cpp" />
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -31,6 +32,7 @@
     <ClCompile Include="Source\SoundController\SoundInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\MusicPlayer.h" />
     <ClInclude Include="Source\Scene2D\CharacterStates.h" />
     <ClInclude Include="Source\Scene2D\CharacterManager.h" />
     <ClInclude Include="Source\Application.h" />
