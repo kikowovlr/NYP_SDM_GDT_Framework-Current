@@ -15,8 +15,6 @@
 // Include filesystem
 #include "System\filesystem.h"
 
-
-
 #include <iostream>
 using namespace std;
 
@@ -37,13 +35,15 @@ public:
 			CMusicPlayer::GetInstance()->SetStatus(CMusicPlayer::STATUS::STOP);
 			break;
 		// Can customise how the music player will behave for these modes after completing a music playback.
-		//case CMusicPlayer::PLAYMODE::CONTINUOUS:
-		//case CMusicPlayer::PLAYMODE::SHUFFLE:
-		//	break;
-		//case CMusicPlayer::PLAYMODE::SINGLE_LOOP:
-		//case CMusicPlayer::PLAYMODE::CONTINUOUS_LOOP:
-		//case CMusicPlayer::PLAYMODE::SHUFFLE_LOOP:
-		//	break;
+		case CMusicPlayer::PLAYMODE::CONTINUOUS:
+		case CMusicPlayer::PLAYMODE::SHUFFLE:
+			//CMusicPlayer::GetInstance()->NextMusic();
+			break;
+		case CMusicPlayer::PLAYMODE::SINGLE_LOOP:
+		case CMusicPlayer::PLAYMODE::CONTINUOUS_LOOP:
+		case CMusicPlayer::PLAYMODE::SHUFFLE_LOOP:
+			//CMusicPlayer::GetInstance()->NextMusic();
+			break;
 		default:
 			break;
 		}
@@ -121,7 +121,7 @@ CMusicPlayer::~CMusicPlayer(void)
 bool CMusicPlayer::Init(void)
 {
 	// Initialise the sound engine with default parameters
-	pSoundEngine = createIrrKlangDevice(ESOD_WIN_MM, ESEO_MULTI_THREADED);
+	pSoundEngine = createIrrKlangDevice(/*ESOD_WIN_MM, ESEO_MULTI_THREADED*/);	// Do not use these parameters if using SFX
 	if (pSoundEngine == NULL)
 	{
 		cout << "Unable to initialise the IrrKlang sound engine" << endl;
@@ -287,22 +287,29 @@ void CMusicPlayer::PlayMusic(void)
 			{
 				// if this music has finished playing, then go to next music
 				if (currentISound->isFinished() == true)
+				{
+					cout << "Continuous: NextMusic()" << endl;
 					NextMusic();
+				}
 				// if this music has not finished playing, then quit this method
 				else
 					break;
 			}
 
-			// Get the next music to play
-			pSoundInfo = GetMusic();
-			if (pSoundInfo == nullptr)
-				return;
-			else
+			if (GetStatus() == STATUS::PLAY)
 			{
-				currentISound = pSoundEngine->play2D(pSoundInfo->GetSound(), false, false, true);
-				currentISound->setSoundStopEventReceiver(cSoundStopReceiver, 0);
-				currentISound->setVolume(pSoundInfo->GetVolume());
-				bMusicPlaybackFinished = false;
+				// Get the next music to play
+				pSoundInfo = GetMusic();
+				if (pSoundInfo == nullptr)
+					return;
+				else
+				{
+					cout << "Continuous: Playing" << endl;
+					currentISound = pSoundEngine->play2D(pSoundInfo->GetSound(), false, false, true);
+					currentISound->setSoundStopEventReceiver(cSoundStopReceiver, 0);
+					currentISound->setVolume(pSoundInfo->GetVolume());
+					bMusicPlaybackFinished = false;
+				}
 			}
 		}
 		break;
@@ -314,7 +321,10 @@ void CMusicPlayer::PlayMusic(void)
 			{
 				// if this music has finished playing, then go to next music
 				if (currentISound->isFinished() == true)
+				{
+					cout << "SHUFFLE: NextMusic()" << endl;
 					NextMusic();
+				}
 				// if this music has not finished playing, then quit this method
 				else
 					break;
@@ -326,16 +336,20 @@ void CMusicPlayer::PlayMusic(void)
 				// Update the mapCurrent
 				mapCurrent = musicMap.find(musicVector[iCurrentMusicVector]);
 
-				// Get the next music to play
-				pSoundInfo = GetMusic();
-				if (pSoundInfo == nullptr)
-					return;
-				else
+				if (GetStatus() == STATUS::PLAY)
 				{
-					currentISound = pSoundEngine->play2D(pSoundInfo->GetSound(), false, false, true);
-					currentISound->setSoundStopEventReceiver(cSoundStopReceiver, 0);
-					currentISound->setVolume(pSoundInfo->GetVolume());
-					bMusicPlaybackFinished = false;
+					// Get the next music to play
+					pSoundInfo = GetMusic();
+					if (pSoundInfo == nullptr)
+						return;
+					else
+					{
+						cout << "SHUFFLE: Playing" << endl;
+						currentISound = pSoundEngine->play2D(pSoundInfo->GetSound(), false, false, true);
+						currentISound->setSoundStopEventReceiver(cSoundStopReceiver, 0);
+						currentISound->setVolume(pSoundInfo->GetVolume());
+						bMusicPlaybackFinished = false;
+					}
 				}
 			}
 		}
@@ -420,6 +434,11 @@ void CMusicPlayer::NextMusic(void)
 			mapCurrent = mapStart;
 			// Reset the currentISound so that the Music Player is not playing any music
 			currentISound = NULL;
+
+			if (ePlayMode == CONTINUOUS)
+			{
+				SetStatus(STATUS::STOP);
+			}
 		}
 	}
 	else if (ePlayMode == SHUFFLE)
@@ -451,11 +470,11 @@ void CMusicPlayer::NextMusic(void)
 		}
 	}
 
-	// If current status is Play, then play the music
-	if (GetStatus() == CMusicPlayer::STATUS::PLAY)
-	{
-		PlayMusic();
-	}
+	//// If current status is Play, then play the music
+	//if (GetStatus() == CMusicPlayer::STATUS::PLAY)
+	//{
+	//	PlayMusic();
+	//}
 }
 
 /**

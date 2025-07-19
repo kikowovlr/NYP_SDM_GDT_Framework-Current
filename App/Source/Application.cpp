@@ -266,7 +266,10 @@ bool Application::Init(void)
 	// Initialise the CMusicPlayer instance
 	pMusicPlayer = CMusicPlayer::GetInstance();
 	pMusicPlayer->Init();
-	//pMusicPlayer->AddMusic();
+	pMusicPlayer->AddMusic("Music\\time-traveler.mp3", 1, true);
+	pMusicPlayer->AddMusic("Music\\fluffing-a-duck.mp3", 2, true);
+	pMusicPlayer->AddMusic("Music\\scheming-weasel.mp3", 3, true);
+
 
 	// Initialise CScene2D
 	pScene2D = CScene2D::GetInstance();
@@ -353,7 +356,7 @@ void Application::Run(void)
 		// Update the FPS Counter
 		pFPSCounter->Update();
 
-		//pMusicPlayer->PlayMusicByID(1);
+		pMusicPlayer->PlayMusicByID(2);
 
 		// Calculate the delta time since the last frame
 		dElapsedTime = pFPSCounter->GetDeltaTime();

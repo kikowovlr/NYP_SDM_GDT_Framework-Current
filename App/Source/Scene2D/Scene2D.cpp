@@ -260,7 +260,7 @@ bool CScene2D::Update(const double dElapsedTime)
 	// Check if the game should be ended
 	else if (pGameManager->bPlayerLost == true)
 	{
-		//pSoundController->PlaySoundByID(2);
+		pSoundController->PlaySoundByID(2);
 		pCharacterManager->DeactivateAllCharacters();
 		return false; // closes the app
 	}
