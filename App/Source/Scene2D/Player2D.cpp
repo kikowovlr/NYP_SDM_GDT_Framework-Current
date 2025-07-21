@@ -274,7 +274,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Handle ALL jump types in one place (priority order: Wall Jump > Ground Jump > Double Jump)
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
 	{
-		pSoundController->PlaySoundByID(3);
+		//pSoundController->PlaySoundByID(3);
 
 		// 1. Wall Jump (highest priority)
 		if (CanWallJump()) {
