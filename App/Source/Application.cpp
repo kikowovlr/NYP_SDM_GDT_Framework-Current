@@ -356,7 +356,7 @@ void Application::Run(void)
 		// Update the FPS Counter
 		pFPSCounter->Update();
 
-		pMusicPlayer->PlayMusicByID(2);
+		//pMusicPlayer->PlayMusicByID(2);
 
 		// Calculate the delta time since the last frame
 		dElapsedTime = pFPSCounter->GetDeltaTime();
