@@ -247,7 +247,7 @@ bool CEnemy2D::Update(const double dElapsedTime)
 					if (bFirstPosition == true)
 					{	
 						// Set a destination
-						vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
+						vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
 						// Calculate the direction between enemy2D and this destination
 						vec2Direction = glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY));
 						bFirstPosition = false;
@@ -258,7 +258,7 @@ bool CEnemy2D::Update(const double dElapsedTime)
 						if (glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY)) == vec2Direction)
 						{
 							// Set a destination
-							vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileHalfSize().x, vec2PathPoint.y * pMap2D->GetTileHalfSize().y);
+							vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
 						}
 						else
 							break;
