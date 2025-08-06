@@ -338,6 +338,22 @@ bool CMap2D::Init(	const unsigned int uiNumLevels,
 bool CMap2D::Update(const double dElapsedTime)
 {
 	UpdateTimedBlocks(dElapsedTime);
+
+	if (isPortSoundFading)
+	{
+		float currentVolume = portLoopSound->getVolume();
+		float newVolume = currentVolume - fadeSpeed * static_cast<float>(dElapsedTime);
+
+		if (newVolume <= 0.05f)
+		{
+			portLoopSound->stop();
+			portLoopSound->drop(); // drop reference
+			portLoopSound = nullptr;
+			isPortSoundFading = false;
+		}
+		else
+			portLoopSound->setVolume(newVolume);
+	}
 	return true;
 }
 
@@ -1313,6 +1329,13 @@ void CMap2D::ActivatePort(int x, int y)
 
 	activePorts.emplace_back(x, y);
 
+	// if not alrdy playing, play buzz sound
+	if (!isPortLoopPlaying) {
+		portLoopSound = CSoundController::GetInstance()->getSoundEngine()->play2D(
+			CSoundController::GetInstance()->GetSound(8)->GetSound(), true, false, false, true);
+		isPortLoopPlaying = true;
+	}
+
 	// When enough ports are activated
 	if (activePorts.size() >= requiredActivePorts) {
 		UnlockDoors(); // Changes sprites to unlocked
@@ -1336,6 +1359,12 @@ void CMap2D::DeactivatePort(int x, int y)
 		activePorts.erase(it, activePorts.end());
 	}
 
+	// if no ports are turned on, start fade out
+	if (activePorts.empty() && isPortLoopPlaying)
+	{
+		isPortSoundFading = true;
+	}
+
 	// When ports are deactivated
 	if (activePorts.size() < requiredActivePorts && AreDoorsUnlocked()) {
 		LockDoors(); // Reverts sprites to locked
@@ -1345,6 +1374,11 @@ void CMap2D::DeactivatePort(int x, int y)
 void CMap2D::DeactivateAllPorts()
 {
 	activePorts.clear();
+
+	if (isPortLoopPlaying)
+	{
+		isPortSoundFading = true;
+	}
 }
 
 void CMap2D::LockDoors()

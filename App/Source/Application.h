@@ -12,6 +12,7 @@
 #include "TimeControl\FPSCounter.h"
 
 #include "MusicPlayer.h"
+#include "..\Source\SoundController\SoundController.h"
 
 struct GLFWwindow;
 
@@ -50,6 +51,8 @@ protected:
 	CFPSCounter* pFPSCounter;
 	// The handler to the CMusicPlayer instance
 	CMusicPlayer* pMusicPlayer;
+	// The handler to the CSoundController instance
+	CSoundController* pSoundController;
 	// Boolean flag to indicate fullscreen
 	bool bFullscreen;
 };

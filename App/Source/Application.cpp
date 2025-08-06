@@ -263,13 +263,42 @@ bool Application::Init(void)
 	pFPSCounter = CFPSCounter::GetInstance();
 	pFPSCounter->Init(true);
 
+	// Load the sounds into SoundController
+	pSoundController = CSoundController::GetInstance();
+	pSoundController->Init();
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\collectHealthPack.wav"), 1, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\collectKey.mp3"), 2, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\jump.wav"), 3, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\pickupGun.mp3"), 4, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\pickupOrb.wav"), 5, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\energycanOpen.mp3"), 6, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\slurp.mp3"), 7, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\lamp-buzz.mp3"), 8, true, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\death.wav"), 9, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\shimmer.mp3"), 10, true);
+	pSoundController->AddSound(FileSystem::getPath("Sounds\\switchCharacter.wav"), 11, true);
+
+	// adjust volume accordingly
+	pSoundController->GetSound(3)->SetVolume(0.05f); // jump
+	pSoundController->GetSound(1)->SetVolume(0.2f); // health pack
+	pSoundController->GetSound(4)->SetVolume(0.5f); // gun
+	pSoundController->GetSound(11)->SetVolume(0.3f); // switch character
+
 	// Initialise the CMusicPlayer instance
 	pMusicPlayer = CMusicPlayer::GetInstance();
 	pMusicPlayer->Init();
-	pMusicPlayer->AddMusic("Music\\time-traveler.mp3", 1, true);
-	pMusicPlayer->AddMusic("Music\\fluffing-a-duck.mp3", 2, true);
-	pMusicPlayer->AddMusic("Music\\scheming-weasel.mp3", 3, true);
+	pMusicPlayer->AddMusic("Music\\bgm.mp3", 1, true);
+	pMusicPlayer->AddMusic("Music\\bgm2.mp3", 2, true);
+	pMusicPlayer->AddMusic("Music\\bgm3.mp3", 3, true);
+	pMusicPlayer->AddMusic("Music\\danger.mp3", 4, true);
 
+	pMusicPlayer->SetPlayMode(CMusicPlayer::SHUFFLE_LOOP);
+
+	std::vector<int> bgmIDs = { 1, 2, 3 };
+	pMusicPlayer->SetCustomShuffleLoopIDs(bgmIDs);
+
+	pMusicPlayer->SetStatus(CMusicPlayer::PLAY);
+	pMusicPlayer->PlayMusic();
 
 	// Initialise CScene2D
 	pScene2D = CScene2D::GetInstance();
@@ -306,8 +335,11 @@ void Application::Run(void)
 	// Start timer to calculate how long it takes to render this frame
 	pFPSCounter->StartTimer();
 
+	if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_P))
+		pMusicPlayer->PrintSelf();
+
 	double dElapsedTime = 0.0;
-	
+
 	// Render loop
 	while (!glfwWindowShouldClose(pSettings->pWindow))
 	{
@@ -330,6 +362,7 @@ void Application::Run(void)
 			break;
 		}
 		
+		pMusicPlayer->Update(dElapsedTime);
 
 		// Call the CScene2D's Pre-Render method
 		pScene2D->PreRender();

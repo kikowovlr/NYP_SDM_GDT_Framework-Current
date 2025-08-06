@@ -213,6 +213,17 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	if (isAtExit) // dont update if at exit
 		return true;
 
+	// find gun tile
+	if (isKeyPicked && !isGunTileFound)
+	{
+		unsigned int gunRow, gunCol;
+		if (pMap2D->FindValue(22, gunRow, gunCol))
+		{
+			gunTile = glm::ivec2(gunCol, gunRow);
+		}
+		isGunTileFound = true;
+	}
+
 	// Update timers
 	if (m_bWallJumpCooldown) {
 		m_fWallJumpCooldownTimer -= dElapsedTime;
@@ -274,8 +285,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Handle ALL jump types in one place (priority order: Wall Jump > Ground Jump > Double Jump)
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_SPACE))
 	{
-		//pSoundController->PlaySoundByID(3);
-
 		// 1. Wall Jump (highest priority)
 		if (CanWallJump()) {
 			float horizontalDir = (cPhysics2D.GetWallJumpStatus() == CPhysics2D::WALLJUMPSTATUS::LEFT_WALL) ? 1.0f : -1.0f;
@@ -286,6 +295,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 			cPhysics2D.SetNewJump(true);
 			m_bWallJumpCooldown = true;
 			m_fWallJumpCooldownTimer = WALL_JUMP_COOLDOWN_TIME;
+			pSoundController->PlaySoundByID(3);
 		}
 		// ground jump
 		else if (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::IDLE)
@@ -293,6 +303,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::JUMP);
 			cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
 			cPhysics2D.SetNewJump(true);
+			pSoundController->PlaySoundByID(3);
 		}
 		// double jump
 		else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP ||
@@ -304,6 +315,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 				cPhysics2D.SetInitialVelocity(vec2JumpSpeed);
 				cPhysics2D.SetNewJump(true);
 				m_bHasDoubleJumped = true; // Track double jump usage
+				pSoundController->PlaySoundByID(3);
 			}
 		}
 	}
@@ -437,6 +449,23 @@ bool CPlayer2D::Update(const double dElapsedTime)
 
 	// Interact with the Map
 	InteractWithMap();
+
+	// play sound when close to gun
+	if (isKeyPicked && !isGunPicked) {
+		glm::vec2 gunWorldPos = glm::vec2(gunTile) * pMap2D->GetTileSize();
+		float distanceFromGun = glm::distance(vec2Position, gunWorldPos);
+
+		if (distanceFromGun < 110.f && !hasPlayedGunProximitySFX)
+		{
+			pSoundController->PlaySoundByID(10);
+			hasPlayedGunProximitySFX = true;
+			cout << "sound played" << endl;
+		}
+		else if (distanceFromGun >= 110.f)
+		{
+			hasPlayedGunProximitySFX = false;
+		}
+	}
 
 	// Update facing direction based on horizontal velocity
 	if (vec2MovementVelocity.x < -0.01f)
@@ -574,12 +603,14 @@ void CPlayer2D::InteractWithMap(void)
 		// Increase the Orb by 1
 		pInventoryItem = pInventoryManager->GetItem("Orb");
 		pInventoryItem->Add(1);
+		pSoundController->PlaySoundByID(5);
 		break;
 	case 21: // health pack
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		// Increase the health
 		pInventoryItem = pInventoryManager->GetItem("Health");
 		pInventoryItem->Add(20);
+		pSoundController->PlaySoundByID(1);
 		break;
 	case 22: // laser gun
 		pInventoryManager->BindToCharacter(this);
@@ -590,20 +621,29 @@ void CPlayer2D::InteractWithMap(void)
 		pInventoryItem = pInventoryManager->GetItem("Energy");
 		pInventoryItem->Add(50);
 		isGunPicked = true;
+		pSoundController->PlaySoundByID(4);
 		break;
 	case 25:// energy can
+	{
 		pInventoryManager->BindToCharacter(this);
 		// Erase the can from this position
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		pInventoryItem = pInventoryManager->GetItem("Energy");
 		pInventoryItem->Add(25);
+		// play can opening sound first
+		CSoundInfo* pSoundInfo = pSoundController->GetSound(6);
+		auto currSound = pSoundController->getSoundEngine()->play2D(pSoundInfo->GetSound(), pSoundInfo->GetLoopStatus(), false, false, true);
+		// play slurp after can opening sound is done
+		currSound->setSoundStopEventReceiver(new CDelayedSound(7));
 		break;
+	}
 	case 26: // key
 		// Erase key
 		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
 		isKeyPicked = true;
 		// unlock chest -> replace with gun
 		UnlockChest();
+		pSoundController->PlaySoundByID(2);
 		break;
 	case 28: // spike
 		// Decrease the health by 1

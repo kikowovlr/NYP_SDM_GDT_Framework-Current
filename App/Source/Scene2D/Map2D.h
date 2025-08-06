@@ -32,6 +32,7 @@
 
 // Include Entity2D
 #include "Primitives/Entity2D.h"
+#include <includes/irrKlang.h>
 
 // A structure storing information about Map Sizes
 struct MapSize {
@@ -191,9 +192,6 @@ public:
 	bool IsEntranceDoor(int x, int y) const;
 	glm::ivec2 GetExitDoorPos() const;
 
-	//void LockChest();
-	//void UnlockChest();
-
 protected:
 	// The variable containing the rapidcsv::Document
 	// We will load the CSV file's content into this Document
@@ -282,5 +280,10 @@ protected:
 	glm::ivec2 exitDoorPos;      // Exit door (x,y)
 	bool areDoorsUnlocked = false;
 	bool areDoorsUsed = false;
+
+	bool isPortLoopPlaying = false; // for port buzzing sound
+	bool isPortSoundFading = false;
+	float fadeSpeed = 0.7f;
+	irrklang::ISound* portLoopSound = nullptr; // optional (used to stop directly)
 };
 

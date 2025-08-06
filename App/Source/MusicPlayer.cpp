@@ -131,6 +131,37 @@ bool CMusicPlayer::Init(void)
 	return true;
 }
 
+void CMusicPlayer::Update(double dElapsedTime)
+{
+	if (isFading) {
+		if (currMusic) {
+			// fade out current music
+			float vol = currMusic->getVolume();
+			vol -= musicFadeSpeed * dElapsedTime;
+			currMusic->setVolume(vol);
+
+			if (vol <= 0.05f) {
+				currMusic->stop();
+				currMusic = nullptr;
+			}
+
+		}
+
+		// play next music
+		float nextVol = nextMusic->getVolume();
+		nextVol += musicFadeSpeed * dElapsedTime;
+		nextMusic->setVolume(nextVol);
+
+		if (nextVol >= 0.95f)
+		{
+			nextMusic->setVolume(1.f);
+			currMusic = nextMusic;
+			nextMusic = nullptr;
+			isFading = false;
+		}
+	}
+}
+
 /**
  @brief Add a music file
  @param filename A string variable storing the name of the file to read from
@@ -533,9 +564,11 @@ void CMusicPlayer::SetPlayMode(PLAYMODE newPlayMode)
 		iCurrentMusicVector = 0;
 
 		// Iterate through the musicMap
-		for (std::map<int, CSoundInfo*>::iterator it = musicMap.begin(); it != musicMap.end(); ++it)
-		{
-			musicVector.push_back(it->first);
+		if (!bCustomShuffleLoop) {
+			for (std::map<int, CSoundInfo*>::iterator it = musicMap.begin(); it != musicMap.end(); ++it)
+			{
+				musicVector.push_back(it->first);
+			}
 		}
 
 		// Use current time as seed for random generator
@@ -682,6 +715,44 @@ void CMusicPlayer::PrintSelf(void)
 		cout << "\t" << it->first << "\t: " << ((CSoundInfo*)it->second)->GetFilename() << endl;
 	}
 	cout << "End of CMusicPlayer::PrintSelf()" << endl << endl;
+}
+
+void CMusicPlayer::SetCustomShuffleLoopIDs(const std::vector<int>& ids)
+{
+	shuffleLoopIDs = ids;
+	bCustomShuffleLoop = true;
+
+	// copy to music vector for shuffle logic
+	musicVector = shuffleLoopIDs;
+	iCurrentMusicVector = 0;
+
+	// shuffle the musicVector
+	srand(static_cast<unsigned int>(time(NULL)));
+	std::random_shuffle(musicVector.begin(), musicVector.end());
+
+	// Point to first track
+	mapCurrent = musicMap.find(musicVector[iCurrentMusicVector]);
+}
+
+void CMusicPlayer::FadeToMusicID(int id)
+{
+	pSoundInfo = GetMusic(id);
+	if (!pSoundInfo)
+	{
+		cout << "Sound #" << id << " is not playable." << endl;
+		return;
+	}
+	else if (pSoundEngine->isCurrentlyPlaying(pSoundInfo->GetSound()))
+	{
+		cout << "Sound #" << id << " is currently being played." << endl;
+		return;
+	}
+
+	// start next music paused first
+	nextMusic = pSoundEngine->play2D(pSoundInfo->GetSound(), pSoundInfo->GetLoopStatus(), true, true, true);
+	nextMusic->setVolume(0.1f);
+	nextMusic->setIsPaused(true);
+	isFading = true;
 }
 
 /**

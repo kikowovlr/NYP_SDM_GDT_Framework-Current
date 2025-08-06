@@ -158,7 +158,11 @@ void CSoundController::PlaySoundByID(const int ID)
 	if (pSoundInfo->GetSoundType() == CSoundInfo::SOUNDTYPE::_2D)
 	{
 		currentISound = pSoundEngine->play2D(	pSoundInfo->GetSound(), 
-												pSoundInfo->GetLoopStatus(), false, false, true);
+												pSoundInfo->GetLoopStatus(), true, false, true);
+
+		currentISound->setVolume(pSoundInfo->GetVolume());
+		currentISound->setIsPaused(false);
+
 		//ISoundEffectControl* fx = 0;
 		//if (currentISound)
 		//	fx = currentISound->getSoundEffectControl();
@@ -290,6 +294,8 @@ bool CSoundController::VolumeDecrease(const int ID)
 	// Set the volume
 	pSoundInfo->SetVolume(fVolume);
 
+	cout << ID << ": " << fVolume << endl;
+
 	//// Get the ISoundSource
 	//ISoundSource* pISoundSource = GetSound(ID)->GetSound();
 	//if (pISoundSource == nullptr)
@@ -365,6 +371,16 @@ CSoundInfo* CSoundController::GetSound(const int iID)
 		return soundMap[iID];
 
 	return nullptr;
+}
+
+ISoundEngine* CSoundController::getSoundEngine() const
+{
+	return pSoundEngine;
+}
+
+CSoundInfo* CSoundController::getSoundInfo() const
+{
+	return pSoundInfo;
 }
 
 /**

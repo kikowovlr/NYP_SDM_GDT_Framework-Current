@@ -53,6 +53,8 @@
 
 #include "..\SoundController\SoundController.h"
 
+#include "..\SoundController\CDelayedSound.h"
+
 class CPlayer2D : public CSingletonTemplate<CPlayer2D>, public CEntity2D
 {
 	friend CSingletonTemplate<CPlayer2D>;
@@ -174,4 +176,8 @@ protected:
 	bool m_bHasDoubleJumped = false;
 
 	glm::ivec2 keyPos = glm::ivec2(9, 6);
+
+	bool hasPlayedGunProximitySFX = false;
+	glm::ivec2 gunTile = { -1, -1 }; // store gun tile position
+	bool isGunTileFound = false;
 };

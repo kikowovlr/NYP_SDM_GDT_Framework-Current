@@ -14,6 +14,7 @@
 #include "InventoryItem.h"
 #include "InventoryManager.h"
 #include "CharacterManager.h"
+#include "..\SoundController\SoundController.h"
 
 class CGameManager : public CSingletonTemplate<CGameManager>
 {

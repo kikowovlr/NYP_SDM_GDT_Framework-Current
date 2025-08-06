@@ -62,7 +62,10 @@ public:
 
 	// PrintSelf
 	void PrintSelf(void);
+	CSoundInfo* GetSound(const int iID);
 
+	ISoundEngine* getSoundEngine() const;
+	CSoundInfo* getSoundInfo() const;
 protected:
 	// Constructor
 	CSoundController(void);
@@ -71,7 +74,7 @@ protected:
 	virtual ~CSoundController(void);
 
 	// Get an sound from this map
-	CSoundInfo* GetSound(const int iID);
+	
 	// Remove an sound from this map
 	bool RemoveSound(const int iID);
 	// Get the number of sounds in this map

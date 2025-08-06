@@ -5,6 +5,7 @@
  Date: May 2021
  */
 #include "GameManager.h"	
+#include "..\SoundController\SoundController.h"
 
 /**
 @brief Constructor
@@ -63,6 +64,7 @@ void CGameManager::UpdatePlayerState()
 		// Reset health and deduct lives
 		pHealth->iItemCount = pHealth->GetMaxCount();
 		pLives->Remove(1);
+		CSoundController::GetInstance()->PlaySoundByID(9);
 
 		// Respawn player (assuming you have access to player position)
 		if (CEntity2D* pCurrentPlayer = CharacterManager::GetInstance()->GetActiveCharacter())

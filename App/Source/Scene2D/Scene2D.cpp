@@ -179,13 +179,8 @@ bool CScene2D::Init(void)
 		glm::ivec2(19, 5)   // Exit door pos
 	);
 
-	// Load the sounds into SoundController
 	pSoundController = CSoundController::GetInstance();
 	pSoundController->Init();
-	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Bell.ogg"), 1, true);
-	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Explosion.ogg"), 2, true);
-	pSoundController->AddSound(FileSystem::getPath("Sounds\\Sound_Jump.ogg"), 3, true);
-
 
 	return true;
 }
@@ -203,7 +198,10 @@ bool CScene2D::Update(const double dElapsedTime)
 
 	// Switch character the moment TAB is pressed
 	if (pKeyboardController->IsKeyPressed(GLFW_KEY_TAB))
+	{
 		pCharacterManager->SwitchCharacter();
+		pSoundController->PlaySoundByID(11);
+	}
 
 	// Call the pPlayer2D's update method before Map2D as we want to capture the inputs before map2D update
 	pCharacterManager->UpdateCurrentCharacter(dElapsedTime);

@@ -53,6 +53,8 @@ public:
 	// Initialise this class instance
 	bool Init(void);
 
+	void Update(double dElapsedTime);
+
 	// Add a music file
 	bool AddMusic(	string filename, 
 					const int iID,
@@ -102,6 +104,10 @@ public:
 	// PrintSelf
 	void PrintSelf(void);
 
+	void SetCustomShuffleLoopIDs(const std::vector<int>& ids);
+
+	void FadeToMusicID(int id);
+
 protected:
 	// Constructor
 	CMusicPlayer(void);
@@ -139,4 +145,12 @@ protected:
 	std::vector<int> musicVector;
 	// Variable storing index of music in musicVector being played
 	int iCurrentMusicVector;
+
+	std::vector<int> shuffleLoopIDs;
+	bool bCustomShuffleLoop = false; // flag to enable custom shuffle
+
+	irrklang::ISound* currMusic = nullptr;
+	irrklang::ISound* nextMusic = nullptr;
+	float musicFadeSpeed = 0.5f;
+	bool isFading = true;
 };
