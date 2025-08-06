@@ -47,12 +47,12 @@ CScene2D::~CScene2D(void)
 		pKeyboardController = NULL;
 	}
 
-	// Destroy the pEnemy2DManager
-	if (pEnemy2DManager)
-	{
-		pEnemy2DManager->Destroy();
-		pEnemy2DManager = NULL;
-	}
+	//// Destroy the pEnemy2DManager
+	//if (pEnemy2DManager)
+	//{
+	//	pEnemy2DManager->Destroy();
+	//	pEnemy2DManager = NULL;
+	//}
 
 	if (pCharacterManager)
 	{
@@ -129,30 +129,30 @@ bool CScene2D::Init(void)
 		return false;
 	}
 
-	// Initialise the CEnemy2DManager
-	pEnemy2DManager = CEnemy2DManager::GetInstance();
-	pEnemy2DManager->Init();
-	pEnemy2DManager->SetShader("Shader2D");
+	//// Initialise the CEnemy2DManager
+	//pEnemy2DManager = CEnemy2DManager::GetInstance();
+	//pEnemy2DManager->Init();
+	//pEnemy2DManager->SetShader("Shader2D");
 
 	// Create and initialise the CEnemy2D
-	while (true)
-	{
-		// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
-		unsigned int uiRow = -1;
-		unsigned int uiCol = -1;
-		if (pMap2D->FindValue(300, uiRow, uiCol) == false)
-			break;	// Stop this loop since there are no more enemies in this map
+	//while (true)
+	//{
+	//	// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
+	//	unsigned int uiRow = -1;
+	//	unsigned int uiCol = -1;
+	//	if (pMap2D->FindValue(300, uiRow, uiCol) == false)
+	//		break;	// Stop this loop since there are no more enemies in this map
 
-		// Erase the value of the player in the arrMapInfo
-		pMap2D->SetMapInfo(uiRow, uiCol, 0);
+	//	// Erase the value of the player in the arrMapInfo
+	//	pMap2D->SetMapInfo(uiRow, uiCol, 0);
 
-		int uiIndex = -1;
-		if (pEnemy2DManager->Activate(glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
-			uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y), uiIndex) == false)
-		{
-			cout << "Unable to activate an Enemy2D at [" << uiRow << ", " << uiCol << "]" << endl;
-		}
-	}
+	//	int uiIndex = -1;
+	//	if (pEnemy2DManager->Activate(glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
+	//		uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y), uiIndex) == false)
+	//	{
+	//		cout << "Unable to activate an Enemy2D at [" << uiRow << ", " << uiCol << "]" << endl;
+	//	}
+	//}
 
 	// Store the keyboard controller singleton instance here
 	pKeyboardController = CKeyboardController::GetInstance();
@@ -210,7 +210,7 @@ bool CScene2D::Update(const double dElapsedTime)
 
 	// Call all the cEnemy2D's update method before Map2D 
 	// as we want to capture the updates before map2D update
-	pEnemy2DManager->Update(dElapsedTime);
+	//pEnemy2DManager->Update(dElapsedTime);
 
 	// Call the Map2D's update method
 	pMap2D->Update(dElapsedTime);
@@ -296,9 +296,9 @@ void CScene2D::Render(void)
 	// Call the Map2D's PostRender()
 	pMap2D->PostRender();
 
-	pEnemy2DManager->PreRender();
-	pEnemy2DManager->Render();
-	pEnemy2DManager->PostRender();
+	//pEnemy2DManager->PreRender();
+	//pEnemy2DManager->Render();
+	//pEnemy2DManager->PostRender();
 
 	pCharacterManager->Render();
 
