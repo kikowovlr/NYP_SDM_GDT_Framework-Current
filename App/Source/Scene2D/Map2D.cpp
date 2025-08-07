@@ -699,6 +699,27 @@ bool CMap2D::FindValue(const int iValue, unsigned int& uirRow, unsigned int& uir
 	return false;
 }
 
+std::vector<glm::vec2> CMap2D::FindAllValues(const int iValue, const bool bInvert)
+{
+	std::vector<glm::vec2> positions;
+
+	int numRows = pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_YAXIS", 24);
+	int numCols = pSettings->cSimpleIniA.GetIntValue("NumTiles", "NUM_TILES_XAXIS", 32);
+
+	for (int uiRow = 0; uiRow < numRows; uiRow++)
+	{
+		for (int uiCol = 0; uiCol < numCols; uiCol++)
+		{
+			if (arrMapInfo[uiCurLevel][uiRow][uiCol].value == iValue)
+			{
+				int actualRow = bInvert ? (numRows - uiRow - 1) : uiRow;
+				positions.push_back(glm::vec2(uiCol, actualRow));
+			}
+		}
+	}
+	return positions;
+}
+
 /**
  @brief Set current level
  */

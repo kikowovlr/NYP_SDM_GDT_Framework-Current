@@ -49,6 +49,12 @@ public:
 	// Decrease Master volume
 	bool MasterVolumeDecrease(void);
 
+	bool ToggleMuteSFX();
+
+	void SetMasterVolume(float volume);
+
+	float GetMasterVolume();
+
 	// Increase volume of a ISoundSource
 	bool VolumeIncrease(const int ID);
 	// Decrease volume of a ISoundSource

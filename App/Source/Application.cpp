@@ -282,6 +282,7 @@ bool Application::Init(void)
 	pSoundController->GetSound(3)->SetVolume(0.05f); // jump
 	pSoundController->GetSound(1)->SetVolume(0.2f); // health pack
 	pSoundController->GetSound(4)->SetVolume(0.5f); // gun
+	pSoundController->GetSound(5)->SetVolume(0.7f); // orb
 	pSoundController->GetSound(11)->SetVolume(0.3f); // switch character
 
 	// Initialise the CMusicPlayer instance
@@ -297,7 +298,6 @@ bool Application::Init(void)
 	std::vector<int> bgmIDs = { 1, 2, 3 };
 	pMusicPlayer->SetCustomShuffleLoopIDs(bgmIDs);
 
-	pMusicPlayer->SetStatus(CMusicPlayer::PLAY);
 	pMusicPlayer->PlayMusic();
 
 	// Initialise CScene2D
@@ -335,14 +335,56 @@ void Application::Run(void)
 	// Start timer to calculate how long it takes to render this frame
 	pFPSCounter->StartTimer();
 
-	if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_P))
-		pMusicPlayer->PrintSelf();
-
 	double dElapsedTime = 0.0;
 
 	// Render loop
 	while (!glfwWindowShouldClose(pSettings->pWindow))
 	{
+		// toggle mute all
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_M))
+		{
+			// Get both volumes
+			float musicVolume = pMusicPlayer->GetMasterVolume();
+			float sfxVolume = pSoundController->GetMasterVolume(); // You must implement this
+
+			bool shouldMute = (musicVolume > 0.f || sfxVolume > 0.f);
+
+			// Set volumes accordingly
+			pMusicPlayer->SetMasterVolume(shouldMute ? 0.f : 0.4f);
+			pSoundController->SetMasterVolume(shouldMute ? 0.f : 1.f);
+		}
+		// toggle mute sound effects
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_1))
+		{
+			pSoundController->ToggleMuteSFX();
+		}
+		// toggle mute music
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_2))
+		{
+			pMusicPlayer->ToggleMuteMusic();
+		}
+		// increase/decrease master volume
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_UP))
+		{
+			pMusicPlayer->MasterVolumeIncrease();
+			pSoundController->MasterVolumeIncrease();
+		}
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_DOWN))
+		{
+			pMusicPlayer->MasterVolumeDecrease();
+			pSoundController->MasterVolumeDecrease();
+		}
+		// skip to next song
+		if (CKeyboardController::GetInstance()->IsKeyPressed(GLFW_KEY_ENTER))
+		{
+			// prevent triggering mid fade
+			if (!pMusicPlayer->getIsFading())
+			{
+				int nextID = pMusicPlayer->GetNextMusicIDFromShuffle();
+				pMusicPlayer->FadeToMusicID(nextID);
+			}
+		}
+
 		if (CKeyboardController::GetInstance()->IsKeyReleased(GLFW_KEY_ESCAPE))
 		{
 			break;

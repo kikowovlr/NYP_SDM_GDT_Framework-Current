@@ -55,6 +55,8 @@
 
 #include "..\SoundController\CDelayedSound.h"
 
+#include "..\MusicPlayer.h"
+
 class CPlayer2D : public CSingletonTemplate<CPlayer2D>, public CEntity2D
 {
 	friend CSingletonTemplate<CPlayer2D>;
@@ -152,6 +154,8 @@ protected:
 
 	CSoundController* pSoundController;
 
+	CMusicPlayer* pMusicPlayer;
+
 	bool isGunPicked;
 	bool isKeyPicked = false;
 
@@ -180,4 +184,11 @@ protected:
 	bool hasPlayedGunProximitySFX = false;
 	glm::ivec2 gunTile = { -1, -1 }; // store gun tile position
 	bool isGunTileFound = false;
+
+	//bool isSpikePositionsFound = false;
+	//std::vector<glm::vec2> spikePositions;
+	//float dangerRadius = 100.f;
+	//bool isNearSpike = false;
+	//bool isDangerMusic = false;
+	//irrklang::ISound* previousBGM = nullptr;
 };

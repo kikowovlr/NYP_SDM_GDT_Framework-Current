@@ -29,6 +29,12 @@ public:
 
 		CMusicPlayer::GetInstance()->SetMusicPlaybackFinished(true);
 
+		// Ignore this event if a manual fade transition is already in progress
+		if (CMusicPlayer::GetInstance()->getIsFading()) {
+			std::cout << "[INFO] Skipping OnSoundStopped event because fading is in progress." << std::endl;
+			return;
+		}
+
 		switch (CMusicPlayer::GetInstance()->GetPlayMode())
 		{
 		case CMusicPlayer::PLAYMODE::SINGLE:
@@ -133,31 +139,50 @@ bool CMusicPlayer::Init(void)
 
 void CMusicPlayer::Update(double dElapsedTime)
 {
+	if (!isFading && currMusic && ePlayMode == SHUFFLE_LOOP)
+	{
+		// Trigger fade if music is within last 3 seconds
+		if (currMusic->getPlayPosition() >= currMusic->getSoundSource()->getPlayLength() - 3000)
+		{
+			int nextID = GetNextMusicIDFromShuffle();
+			FadeToMusicID(nextID);
+		}	
+	}
+
 	if (isFading) {
+		// if fading out currMusic
 		if (currMusic) {
-			// fade out current music
 			float vol = currMusic->getVolume();
 			vol -= musicFadeSpeed * dElapsedTime;
+			if (vol < 0.0f)
+				vol = 0.0f;
 			currMusic->setVolume(vol);
 
 			if (vol <= 0.05f) {
 				currMusic->stop();
 				currMusic = nullptr;
+				fadeDelayTimer = 3.f; // start 3 second delay between songs
 			}
-
 		}
+		// else if we're in the pause period between fading out and fading in
+		else if (fadeDelayTimer > 0.f) {
+			fadeDelayTimer -= dElapsedTime;
+		}
+		// once pause is over, fade in next music
+		else if (nextMusic) {
+			nextMusic->setIsPaused(false);
+			// play next music	
+			float nextVol = nextMusic->getVolume();
+			nextVol += musicFadeSpeed * dElapsedTime;
+			nextMusic->setVolume(nextVol);
 
-		// play next music
-		float nextVol = nextMusic->getVolume();
-		nextVol += musicFadeSpeed * dElapsedTime;
-		nextMusic->setVolume(nextVol);
-
-		if (nextVol >= 0.95f)
-		{
-			nextMusic->setVolume(1.f);
-			currMusic = nextMusic;
-			nextMusic = nullptr;
-			isFading = false;
+			if (nextVol >= 0.35f)
+			{
+				nextMusic->setVolume(0.4f);
+				currMusic = nextMusic;
+				nextMusic = nullptr;
+				isFading = false;
+			}
 		}
 	}
 }
@@ -379,6 +404,7 @@ void CMusicPlayer::PlayMusic(void)
 						currentISound = pSoundEngine->play2D(pSoundInfo->GetSound(), false, false, true);
 						currentISound->setSoundStopEventReceiver(cSoundStopReceiver, 0);
 						currentISound->setVolume(pSoundInfo->GetVolume());
+						currMusic = currentISound;
 						bMusicPlaybackFinished = false;
 					}
 				}
@@ -602,8 +628,8 @@ bool CMusicPlayer::MasterVolumeIncrease(void)
 	// Get the current volume
 	float fVolume = pSoundEngine->getSoundVolume() + 0.1f;
 	// Check if the maximum volume has been reached
-	if (fVolume > 1.0f)
-		fVolume = 1.0f;
+	if (fVolume > 0.4f)
+		fVolume = 0.4f;
 
 	// Update the Mastervolume
 	pSoundEngine->setSoundVolume(fVolume);
@@ -631,6 +657,28 @@ bool CMusicPlayer::MasterVolumeDecrease(void)
 	return true;
 }
 
+bool CMusicPlayer::ToggleMuteMusic()
+{
+	// Update the Mastervolume
+	if (pSoundEngine->getSoundVolume() == 0.f)
+		pSoundEngine->setSoundVolume(0.4f);
+	else
+		pSoundEngine->setSoundVolume(0.f);
+	cout << "MasterVolumeDecrease: fVolume = " << pSoundEngine->getSoundVolume() << endl;
+
+	return true;
+}
+
+void CMusicPlayer::SetMasterVolume(float volume)
+{
+	pSoundEngine->setSoundVolume(volume);
+}
+
+float CMusicPlayer::GetMasterVolume()
+{
+	return pSoundEngine->getSoundVolume();
+}
+
 
 /**
  @brief Increase volume of a ISoundSource
@@ -648,9 +696,9 @@ bool CMusicPlayer::VolumeIncrease(void)
 		fVolume += 0.1f;
 
 		// Check if the maximum volume has been reached
-		if (fVolume >= 1.0f)
+		if (fVolume >= 0.4f)
 		{
-			fVolume = 1.0f;
+			fVolume = 0.4f;
 		}
 
 		// Set the new volume
@@ -708,6 +756,10 @@ void CMusicPlayer::PrintSelf(void)
 	cout << "\tThe current status of music playback\t=\t" << eStatus << endl;
 	cout << "\tbMusicPlaybackFinished              \t=\t" << bMusicPlaybackFinished << endl;
 
+	cout << "\tCurrent Music              \t=\t" << currMusic->getSoundSource()->getName() << endl;
+	cout << "\tIs Fading              \t=\t" << isFading << endl;
+
+
 	cout << "\tThe map of all the musicMap created:" << endl;
 	// Iterate through the musicMap
 	for (std::map<int, CSoundInfo*>::iterator it = musicMap.begin(); it != musicMap.end(); ++it)
@@ -734,25 +786,47 @@ void CMusicPlayer::SetCustomShuffleLoopIDs(const std::vector<int>& ids)
 	mapCurrent = musicMap.find(musicVector[iCurrentMusicVector]);
 }
 
-void CMusicPlayer::FadeToMusicID(int id)
+void CMusicPlayer::FadeToMusicID(int id, irrklang::ISound* existingMusic)
 {
-	pSoundInfo = GetMusic(id);
-	if (!pSoundInfo)
-	{
-		cout << "Sound #" << id << " is not playable." << endl;
-		return;
-	}
-	else if (pSoundEngine->isCurrentlyPlaying(pSoundInfo->GetSound()))
-	{
-		cout << "Sound #" << id << " is currently being played." << endl;
-		return;
-	}
+	if (existingMusic) {
+		// fade into exising paused sound
+		nextMusic = existingMusic;
+		nextMusic->setVolume(0.f);
+		nextMusic->setIsPaused(true);
+		isFading = true;
 
-	// start next music paused first
-	nextMusic = pSoundEngine->play2D(pSoundInfo->GetSound(), pSoundInfo->GetLoopStatus(), true, true, true);
-	nextMusic->setVolume(0.1f);
-	nextMusic->setIsPaused(true);
-	isFading = true;
+		// Only pause after fading out currMusic
+		if (currMusic)
+		{
+			fadeDelayTimer = 0.f; // Wait for fade out first
+		}
+		else
+		{
+			fadeDelayTimer = 2.f;
+		}
+	}
+	else {
+		pSoundInfo = GetMusic(id);
+		if (!pSoundInfo)
+		{
+			cout << "Sound #" << id << " is not playable." << endl;
+			return;
+		}
+		else if (pSoundEngine->isCurrentlyPlaying(pSoundInfo->GetSound()))
+		{
+			cout << "Sound #" << id << " is currently being played." << endl;
+			return;
+		}
+
+		// start next music paused first
+		nextMusic = pSoundEngine->play2D(pSoundInfo->GetSound(), pSoundInfo->GetLoopStatus(), true, true, true);
+		isFading = true;
+		fadeDelayTimer = 0.f;
+		if (nextMusic) {
+			nextMusic->setVolume(0.0f);
+			nextMusic->setIsPaused(true); // Stay paused until fade in
+		}
+	}
 }
 
 /**
@@ -782,4 +856,34 @@ CSoundInfo* CMusicPlayer::GetMusic(const int iID)
 		return musicMap[iID];
 
 	return nullptr;
+}
+
+int CMusicPlayer::GetNextMusicIDFromShuffle()
+{
+	if (bCustomShuffleLoop && !shuffleLoopIDs.empty())
+	{
+		// move to next index of shuffle loop ID list
+		iCurrentMusicVector = (iCurrentMusicVector + 1) % shuffleLoopIDs.size();
+		return shuffleLoopIDs[iCurrentMusicVector];
+	}
+
+	// if no custom shuffle loop
+	if (!musicVector.empty())
+	{
+		// Move to next index in the default shuffle list
+		iCurrentMusicVector = (iCurrentMusicVector + 1) % musicVector.size();
+		return musicVector[iCurrentMusicVector];
+	}
+
+	return -1;
+}
+
+bool CMusicPlayer::getIsFading() const
+{
+	return isFading;
+}
+
+irrklang::ISound* CMusicPlayer::GetCurrentMusic() const
+{
+	return currMusic;
 }

@@ -140,6 +140,9 @@ public:
 	// Find the indices of a certain value in arrMapInfo
 	bool FindValue(const int iValue, unsigned int& uirRow, unsigned int& uirCol, const bool bInvert = true);
 
+	// find all indices of a certain value in arrMapInfo
+	std::vector<glm::vec2> FindAllValues(const int iValue, const bool bInvert = true);
+
 	// Set current level
 	void SetCurrentLevel(unsigned int uiCurLevel);
 	// Get current level

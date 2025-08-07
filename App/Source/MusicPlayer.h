@@ -96,6 +96,12 @@ public:
 	// Decrease Master volume
 	bool MasterVolumeDecrease(void);
 
+	bool ToggleMuteMusic();
+
+	void SetMasterVolume(float volume);
+
+	float GetMasterVolume();
+
 	// Increase volume of a ISoundSource
 	bool VolumeIncrease(void);
 	// Decrease volume of a ISoundSource
@@ -106,8 +112,16 @@ public:
 
 	void SetCustomShuffleLoopIDs(const std::vector<int>& ids);
 
-	void FadeToMusicID(int id);
+	void FadeToMusicID(int id, irrklang::ISound* existingMusic = nullptr);
 
+	int GetNextMusicIDFromShuffle();
+
+	bool getIsFading() const;
+
+	irrklang::ISound* GetCurrentMusic() const;
+
+	// Get a music files  from this map
+	CSoundInfo* GetMusic(const int iID);
 protected:
 	// Constructor
 	CMusicPlayer(void);
@@ -117,8 +131,7 @@ protected:
 
 	// Get a music files  from this map
 	CSoundInfo* GetMusic(void);
-	// Get a music files  from this map
-	CSoundInfo* GetMusic(const int iID);
+
 
 	// The current mode of music playback
 	PLAYMODE ePlayMode;
@@ -146,11 +159,16 @@ protected:
 	// Variable storing index of music in musicVector being played
 	int iCurrentMusicVector;
 
-	std::vector<int> shuffleLoopIDs;
+	std::vector<int> shuffleLoopIDs; // vector of bgms in shuffle loop
 	bool bCustomShuffleLoop = false; // flag to enable custom shuffle
 
 	irrklang::ISound* currMusic = nullptr;
 	irrklang::ISound* nextMusic = nullptr;
-	float musicFadeSpeed = 0.5f;
-	bool isFading = true;
+	float musicFadeSpeed = 0.5f; // Volume change per second
+	float fadeDelayTimer = 0.0f; // 2-second delay timer
+	bool isFading = false;
+
+	bool inDanger = false;
+	irrklang::ISound* pausedShuffleMusic = nullptr;
+
 };

@@ -215,6 +215,27 @@ bool CSoundController::MasterVolumeDecrease(void)
 	return true;
 }
 
+bool CSoundController::ToggleMuteSFX()
+{
+	// Update the Mastervolume
+	if (pSoundEngine->getSoundVolume() == 0.f)
+		pSoundEngine->setSoundVolume(1.f);
+	else
+		pSoundEngine->setSoundVolume(0.f);
+	cout << "MasterVolumeDecrease: fVolume = " << pSoundEngine->getSoundVolume() << endl;
+
+	return true;
+}
+
+void CSoundController::SetMasterVolume(float volume)
+{
+	pSoundEngine->setSoundVolume(volume);
+}
+
+float CSoundController::GetMasterVolume()
+{
+	return pSoundEngine->getSoundVolume();
+}
 
 /**
  @brief Increase volume of a ISoundSource

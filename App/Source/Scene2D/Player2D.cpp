@@ -34,6 +34,7 @@ CPlayer2D::CPlayer2D(void)
 	, pInventoryItem(NULL)
 	, pCharacterManager(NULL)
 	, pSoundController(NULL)
+	, pMusicPlayer(NULL)
 	, isGunPicked(false)
 {
 	// Initialise position of the player
@@ -61,6 +62,8 @@ CPlayer2D::~CPlayer2D(void)
 	pInventoryManager = NULL;
 
 	pCharacterManager = NULL;
+
+	pMusicPlayer = NULL;
 
 	pSoundController = NULL;
 
@@ -167,6 +170,8 @@ bool CPlayer2D::Init(void)
 
 	pSoundController = CSoundController::GetInstance();
 
+	pMusicPlayer = CMusicPlayer::GetInstance();
+
 	SetName("TOODEE");
 
 	return true;
@@ -223,6 +228,22 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		}
 		isGunTileFound = true;
 	}
+
+	//if (!isSpikePositionsFound)
+	//{
+	//	std::vector<glm::vec2> spikeLocalPos = pMap2D->FindAllValues(28);
+	//	for (const auto& pos : spikeLocalPos)
+	//	{
+	//		if (pos.y == 1) {
+	//			glm::vec2 worldPos = glm::vec2(
+	//				pos.x * pMap2D->GetTileSize().x,
+	//				pos.y * pMap2D->GetTileSize().y
+	//			);
+	//			spikePositions.push_back(worldPos);
+	//		}
+	//	}
+	//	isSpikePositionsFound = true;
+	//}
 
 	// Update timers
 	if (m_bWallJumpCooldown) {
@@ -450,6 +471,43 @@ bool CPlayer2D::Update(const double dElapsedTime)
 	// Interact with the Map
 	InteractWithMap();
 
+	//// check if near spike
+	//for (const auto& spikePos : spikePositions)
+	//{
+	//	float distance = glm::distance(vec2Position, spikePos);
+	//	if (distance < dangerRadius)
+	//	{
+	//		isNearSpike = true;
+	//		break;
+	//	}
+	//	else
+	//	{
+	//		isNearSpike = false;
+	//	}
+	//}
+
+	//// if is currently touching spikes
+	//if (isNearSpike && !isDangerMusic)
+	//{
+	//	isDangerMusic = true;
+	//	// save current BGM b4 switching music
+	//	previousBGM = pMusicPlayer->GetCurrentMusic();
+	//	previousBGM->setIsPaused();
+
+	//	// play danger music
+	//	pMusicPlayer->FadeToMusicID(4);
+	//}
+	//// else if was touching spikes but not currently touching
+	//else if (!isNearSpike && isDangerMusic)
+	//{
+	//	cout << "back to bgm" << endl;
+	//	isDangerMusic = false;
+	//	// fade to paused shuffle music
+	//	if (previousBGM) {
+	//		pMusicPlayer->FadeToMusicID(-1, previousBGM);
+	//	}
+	//}
+
 	// play sound when close to gun
 	if (isKeyPicked && !isGunPicked) {
 		glm::vec2 gunWorldPos = glm::vec2(gunTile) * pMap2D->GetTileSize();
@@ -646,10 +704,12 @@ void CPlayer2D::InteractWithMap(void)
 		pSoundController->PlaySoundByID(2);
 		break;
 	case 28: // spike
+	{
 		// Decrease the health by 1
 		pInventoryItem = pInventoryManager->GetItem("Health");
 		pInventoryItem->Remove(1);
 		break;
+	}
 	case 99:
 		// Level has been completed
 		if (pKeyboardController->IsKeyPressed(GLFW_KEY_ENTER))
