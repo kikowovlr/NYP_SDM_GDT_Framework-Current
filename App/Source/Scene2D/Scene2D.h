@@ -92,9 +92,10 @@ protected:
 	CGameManager* pGameManager;
 
 	// The handler containing the instance of CEnemy2DManager
-	//CEnemy2DManager* pEnemy2DManager;
+	CEnemy2DManager* pEnemy2DManager;
 
 	// Handle to the CSoundController
 	CSoundController* pSoundController;
+
 };
 

@@ -31,169 +31,83 @@ CInventoryManager::~CInventoryManager(void)
 */
 void CInventoryManager::Destroy(void)
 {
-	// Delete all scenes stored and empty the entire map
-	std::map<std::string, CInventoryItem*>::iterator it, end;
-	end = inventoryMap.end();
-	for (it = inventoryMap.begin(); it != end; ++it)
-	{
-		delete it->second;
-		it->second = nullptr;
+	// Delete global inventory items
+	for (auto& pair : inventoryMap) {
+		delete pair.second;
 	}
 	inventoryMap.clear();
+
+	// Delete character inventories
+	for (auto& charPair : characterInventories) {
+		for (auto& itemPair : charPair.second) {
+			delete itemPair.second;
+		}
+		charPair.second.clear();
+	}
+	characterInventories.clear();
 }
 
 /**
 @brief Add a Scene to this Inventory Manager
 */
-//CInventoryItem* CInventoryManager::Add(	const std::string& _name,
-//										const char* imagePath,
-//										const int iItemMaxCount,
-//										const int iItemCount)
-//{
-//	if (Check(_name))
-//	{
-//		// Item name already exist here, unable to proceed
-//		throw std::exception("Duplicate item name provided");
-//		return NULL;
-//	}
-//
-//	CInventoryItem* cNewItem = new CInventoryItem(imagePath);
-//	cNewItem->iItemMaxCount = iItemMaxCount;
-//	cNewItem->iItemCount = iItemCount;
-//
-//	// Nothing wrong, add the scene to our map
-//	inventoryMap[_name] = cNewItem;
-//
-//	return cNewItem;
-//}
-
 CInventoryItem* CInventoryManager::Add(
 	const std::string& _name,
 	const char* imagePath,
 	const int iItemMaxCount,
 	const int iItemCount)
 {
-   // Check for duplicates (global or character-bound)
-    if (Check(_name)) {
-        throw std::exception("Duplicate item name");
-        return nullptr;
-    }
+	auto& currentInventory = (activeCharacterID == 0) ? inventoryMap : characterInventories[activeCharacterID];
 
-    // Create new item
-    CInventoryItem* cNewItem = new CInventoryItem(imagePath);
-    cNewItem->iItemMaxCount = iItemMaxCount;
-    cNewItem->iItemCount = iItemCount;
+	if (currentInventory.find(_name) != currentInventory.end()) {
+		throw std::exception("Duplicate item name");
+		return nullptr;
+	}
 
-    // Add to global or character inventory
-    if (activeCharacter) {
-        // Add to character's personal inventory
-        characterInventories[activeCharacter][_name] = cNewItem;
-    } else {
-        // Add to global inventory
-        inventoryMap[_name] = cNewItem;
-    }
+	CInventoryItem* newItem = new CInventoryItem(imagePath);
+	newItem->iItemMaxCount = iItemMaxCount;
+	newItem->iItemCount = iItemCount;
 
-    return cNewItem;
+	currentInventory[_name] = newItem;
+	return newItem;
 }
 
 /**
 @brief Remove an item from this Inventory Manager
 */
-
-//bool CInventoryManager::Remove(const std::string& _name)
-//{
-//	// Does nothing if it does not exist
-//	if (Check(_name))
-//	{
-//		// Item is not available, unable to proceed
-//		throw std::exception("Unknown item name provided");
-//		return false;
-//	}
-//
-//	CInventoryItem* target = inventoryMap[_name];
-//
-//	// Delete and remove from our map
-//	delete target;
-//	inventoryMap.erase(_name);
-//
-//	return true;
-//}
 bool CInventoryManager::Remove(const std::string& _name)
 {
-	// If no character is bound, use global inventory
-	if (!activeCharacter) {
-		if (!Check(_name)) {
-			throw std::exception("Unknown item name provided");
-			return false;
-		}
+	auto& currentInventory = (activeCharacterID == 0) ? inventoryMap : characterInventories[activeCharacterID];
 
-		delete inventoryMap[_name];
-		inventoryMap.erase(_name);
-		return true;
-	}
-
-	// Handle character-specific inventory
-	auto& charInventory = characterInventories[activeCharacter];
-	auto it = charInventory.find(_name);
-
-	if (it == charInventory.end()) {
-		throw std::exception("Item not found in current character's inventory");
+	auto it = currentInventory.find(_name);
+	if (it == currentInventory.end()) {
+		throw std::exception("Item not found");
 		return false;
 	}
 
-	// Delete and remove from character's inventory
 	delete it->second;
-	charInventory.erase(it);
+	currentInventory.erase(it);
 	return true;
 }
 
 /**
 @brief Check if a item exists in this Inventory Manager
 */
-//bool CInventoryManager::Check(const std::string& _name)
-//{
-//	return inventoryMap.count(_name) != 0;
-//}
 bool CInventoryManager::Check(const std::string& _name)
 {
-	// Check current character's inventory first
-	if (activeCharacter) {
-		auto& charInventory = characterInventories[activeCharacter];
-		if (charInventory.find(_name) != charInventory.end()) {
-			return true;
-		}
-	}
+	auto& currentInventory = (activeCharacterID == 0) ? inventoryMap : characterInventories[activeCharacterID];
 
-	// Fallback to global inventory
-	return (inventoryMap.find(_name) != inventoryMap.end());
+	return currentInventory.find(_name) != currentInventory.end();
 }
 
 /**
 @brief Get an item by its name
 */ 
-//CInventoryItem* CInventoryManager::GetItem(const std::string& _name)
-//{
-//	// Does nothing if it does not exist
-//	if (!Check(_name))
-//		return NULL;
-//
-//	// Find and return the item
-//	return inventoryMap[_name];
-//}
 CInventoryItem* CInventoryManager::GetItem(const std::string& _name)
 {
-	// Check character-bound inventory first
-	if (activeCharacter) {
-		auto& charInventory = characterInventories[activeCharacter];
-		auto it = charInventory.find(_name);
-		if (it != charInventory.end()) {
-			return it->second;
-		}
-	}
+	auto& currentInventory = (activeCharacterID == 0) ? inventoryMap : characterInventories[activeCharacterID];
 
-	// Fallback to global inventory
-	auto it = inventoryMap.find(_name);
-	return (it != inventoryMap.end()) ? it->second : nullptr;
+	auto it = currentInventory.find(_name);
+	return (it != currentInventory.end()) ? it->second : nullptr;
 }
 
 /**
@@ -205,24 +119,34 @@ CInventoryItem* CInventoryManager::GetItem(const std::string& _name)
 //}
 int CInventoryManager::GetNumItems() const
 {
-	// Return count for current character's inventory
-	if (activeCharacter) {
-		auto it = characterInventories.find(activeCharacter);
-		if (it != characterInventories.end()) {
-			return static_cast<int>(it->second.size());
-		}
-		return 0;
+	if (activeCharacterID == 0) {
+		return static_cast<int>(inventoryMap.size());
 	}
 
-	// Fallback to global inventory count
-	return static_cast<int>(inventoryMap.size());
+	auto it = characterInventories.find(activeCharacterID);
+	if (it != characterInventories.end()) {
+		return static_cast<int>(it->second.size());
+	}
+
+	return 0;
 }
 
 void CInventoryManager::BindToCharacter(CEntity2D* character)
 {
-	activeCharacter = character;
-	if (characterInventories.find(character) == characterInventories.end()) {
-		characterInventories[character] = {}; // Initialize empty inventory
+	if (!character) {
+		// bind to global inventory
+		activeCharacterID = 0; // Use 0 for global inventory
+		if (characterInventories.find(0) == characterInventories.end()) {
+			characterInventories[0] = {};
+		}
+	}
+	else {
+		activeCharacterID = character->GetUniqueID();
+		//std::cout << "Binding inventory to character ID: " << activeCharacterID << std::endl;
+		//std::cout << "Name: " << character->GetName() << std::endl;
+		if (characterInventories.find(activeCharacterID) == characterInventories.end()) {
+			characterInventories[activeCharacterID] = {};
+		}
 	}
 }
 
@@ -232,31 +156,32 @@ void CInventoryManager::DebugPrintAllInventories() const
 
 	// Global Inventory
 	std::cout << "[GLOBAL INVENTORY]" << std::endl;
-	for (const auto& entry : inventoryMap) {  // 'entry' instead of 'name, item'
-		const std::string& itemName = entry.first;          // Key (string)
-		CInventoryItem* pItem = entry.second;               // Value (CInventoryItem*)
-		std::cout << "- " << itemName << ": "
-			<< pItem->iItemCount << "/" << pItem->iItemMaxCount << std::endl;
+	for (const auto& pair : inventoryMap) {
+		std::cout << "- " << pair.first << ": "
+			<< pair.second->iItemCount << "/" << pair.second->iItemMaxCount << std::endl;
 	}
 
-	// Character Inventories
+	// Character inventories
 	std::cout << "\n[CHARACTER INVENTORIES]" << std::endl;
-	for (auto it = characterInventories.begin(); it != characterInventories.end(); ++it)
-	{
-		CEntity2D* entity = it->first;
-		const auto& inventory = it->second;
+	for (const auto& charPair : characterInventories) {
+		if (charPair.first == 0) continue; // skip global here
 
-		std::string charName = entity ? entity->GetName() : "NULL Entity";
-		DebugPrintCharacterInventory(entity, charName);
+		int characterID = charPair.first;
+		std::cout << "[Character ID " << characterID << " Inventory]" << std::endl;
+
+		for (const auto& itemPair : charPair.second) {
+			std::cout << "- " << itemPair.first << ": "
+				<< itemPair.second->iItemCount << "/" << itemPair.second->iItemMaxCount << std::endl;
+		}
 	}
 }
 
-void CInventoryManager::DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const
+void CInventoryManager::DebugPrintCharacterInventory(int characterID, const std::string& charName) const
 {
-	auto charIt = characterInventories.find(character);
+	auto charIt = characterInventories.find(characterID);
 	if (charIt != characterInventories.end()) {
 		std::cout << "[" << charName << " INVENTORY]" << std::endl;
-		for (const auto& entry : charIt->second) {  // charIt->second = character's item map
+		for (const auto& entry : charIt->second) {
 			const std::string& itemName = entry.first;
 			CInventoryItem* pItem = entry.second;
 			std::cout << "- " << itemName << ": "

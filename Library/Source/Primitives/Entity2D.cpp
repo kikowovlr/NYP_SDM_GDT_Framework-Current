@@ -15,6 +15,8 @@
 #include <iostream>
 using namespace std;
 
+unsigned int CEntity2D::nextID = 1;
+
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
  */
@@ -31,6 +33,7 @@ CEntity2D::CEntity2D(void)
 {
 	// Initialise vec2Position
 	vec2Position = glm::vec2(0.0f);
+	uniqueID = nextID++; // create unique id for inventory for each entity
 }
 
 /**
@@ -206,4 +209,9 @@ void CEntity2D::Respawn()
 {
 	vec2Position = vec2StartPosition;
 	std::cout << "WARNING: Base Respawn() called!\n";
+}
+
+unsigned int CEntity2D::GetUniqueID() const
+{
+	return uniqueID;
 }

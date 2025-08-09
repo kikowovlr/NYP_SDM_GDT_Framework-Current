@@ -77,6 +77,9 @@
     <ClCompile Include="Source\Scene2D\BlockEnemy2D.cpp">
       <Filter>Scene2D</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Scene2D\BlockInfo.cpp">
+      <Filter>Scene2D</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Scene2D\Scene2D.h">
@@ -143,6 +146,9 @@
       <Filter>Scene2D</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene2D\BlockEnemy2D.h">
+      <Filter>Scene2D</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene2D\BlockInfo.h">
       <Filter>Scene2D</Filter>
     </ClInclude>
   </ItemGroup>

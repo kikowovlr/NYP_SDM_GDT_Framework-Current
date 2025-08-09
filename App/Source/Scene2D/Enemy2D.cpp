@@ -104,8 +104,13 @@ bool CEnemy2D::Init(void)
 							CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f),
 							-1.0f, 1.0f);
 
+
 	//CS: Create the Quad Mesh using the mesh builder
 	p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
+
+	// Generate the VAO
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
@@ -131,124 +136,107 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	if (!bIsActive)
 		return false;
 
-	// Reset vec2MovementVelocity
-	vec2MovementVelocity = glm::vec2(0.0f);
-	// Set the physics horizontal status to idle
-	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
+	//// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
+	//if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
+	//	&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::FALL))
+	//{
+	//	// Update the elapsed time to the physics engine
+	//	cPhysics2D.AddElapsedTime((float)dElapsedTime);
+	//	// Call the physics engine update method to calculate the final velocity and displacement
+	//	cPhysics2D.Update(dElapsedTime);
+	//	// Get the displacement from the physics engine and update the player position
+	//	vec2MovementVelocity += cPhysics2D.GetFinalVelocity();
 
-	UpdateFSM(); // update fsm states
+	//	// Set the physics vertical status from jump/double jump to fall if the movement direction changes to negative
+	//	if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
+	//		&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+	//	{
+	//		if (cPhysics2D.GetFinalVelocity().y < 0.0f)
+	//			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL, false);
+	//	}
+	//}
 
-	// only account for jump/fall if not able to fly
-	if (!IsFlying())
-	{
-		// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
-		if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-			&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::FALL))
-		{
-			// Update the elapsed time to the physics engine
-			cPhysics2D.AddElapsedTime((float)dElapsedTime);
-			// Call the physics engine update method to calculate the final velocity and displacement
-			cPhysics2D.Update(dElapsedTime);
-			// Get the displacement from the physics engine and update the player position
-			vec2MovementVelocity += cPhysics2D.GetFinalVelocity();
+	//// Update vec2Position
+	//glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
+	//// For calculating the collision point's x-coordinate
+	//float fCollisionCoordX = 0;
+	//// For calculating the collision point's y-coordinate
+	//float fCollisionCoordY = 0;
 
-			// Set the physics vertical status from jump/double jump to fall if the movement direction changes to negative
-			if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-				&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-			{
-				if (cPhysics2D.GetFinalVelocity().y < 0.0f)
-					cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL, false);
-			}
-		}
-	}
+	//// Check for collision with the Tile Maps vertically
+	//if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::WALK)
+	//{
+	//	// Check if the player walks into an obstacle
+	//	if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordX) == CSettings::RESULTS::POSITIVE)
+	//	{
+	//		cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
+	//		// Flip the direction since this direction is blocked
+	//		FlipHorizontalDirection();
+	//	}
 
-	// Update vec2Position
-	glm::vec2 vec2NewPosition = vec2Position + vec2MovementVelocity * (float)dElapsedTime;
-	// For calculating the collision point's x-coordinate
-	float fCollisionCoordX = 0;
-	// For calculating the collision point's y-coordinate
-	float fCollisionCoordY = 0;
+	//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+	//	{
+	//		// Check if he is walking on air; let him fall down
+	//		glm::vec2 vec2InAirPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y);
+	//		if (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2InAirPosition, fCollisionCoordY) == CSettings::RESULTS::NEGATIVE)
+	//		{
+	//			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	//		}
+	//	}
+	//}
 
-	// Check for collision with the Tile Maps vertically
-	if (cPhysics2D.GetHorizontalStatus() == CPhysics2D::HORIZONTALSTATUS::WALK)
-	{
-		// Check if the player walks into an obstacle
-		if (pMap2D->CheckHorizontalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordX) == CSettings::RESULTS::POSITIVE)
-		{
-			cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-			// Flip the direction since this direction is blocked
-			FlipHorizontalDirection();
-		}
+	//// Check for collision with the Tile Maps vertically
+	//if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP) &&
+	//	(cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP) &&
+	//	(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
+	//{
+	//	if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+	//	{
+	//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	//	}
+	//}
 
-		// only let entity fall if they arent able to fly
-		if (!IsFlying())
-		{
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
-			{
-				// Check if he is walking on air; let him fall down
-				glm::vec2 vec2InAirPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y);
-				if (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2InAirPosition, fCollisionCoordY) == CSettings::RESULTS::NEGATIVE)
-				{
-					cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-				}
-			}
-		}
-	}
+	//// Check for collision with the Tile Maps vertically
+	//if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL) &&
+	//	(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
+	//{
+	//	if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+	//	{
+	//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+	//	}
+	//}
 
-	// let flying enemies go through walls
-	if (!IsFlying())
-	{
-		// Check for collision with the Tile Maps vertically
-		if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP) &&
-			(cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP) &&
-			(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
-		{
-			if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-			}
-		}
+	//// Update the vec2Position with the new position
+	//vec2Position = vec2NewPosition;
 
-		// Check for collision with the Tile Maps vertically
-		if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL) &&
-			(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
-		{
-			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-			}
-		}
-	}
-
-	// Update the vec2Position with the new position
-	vec2Position = vec2NewPosition;
-
-	// Constraint the enemy within the map
-	if (pMap2D->Constraint(vec2Position) == true)
-	{
-		// If NOT flying, apply vertical constraints (gravity/falling)
-		if (!IsFlying())
-		{
-			if (vec2MovementVelocity.y > 0.0f)
-			{
-				vec2MovementVelocity.y = 0.0f;
-			}
-			if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-			}
-			else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
-			}
-		}
-	}
+	//// Constraint the enemy within the map
+	//if (pMap2D->Constraint(vec2Position) == true)
+	//{
+	//	if (vec2MovementVelocity.y > 0.0f)
+	//	{
+	//		vec2MovementVelocity.y = 0.0f;
+	//	}
+	//	if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+	//	{
+	//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	//	}
+	//	else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+	//	{
+	//		cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+	//	}
+	//}
 
 	// Interact with the Player
 	InteractWithPlayer();
 
 	// Interact with the Map
 	InteractWithMap();
+
+	UpdateFacingDirection();
+
+	// Update sprites
+	UpdateSpriteAnimation();
+	pAnimatedSprites->Update(dElapsedTime);
 
 	// Update the model
 	model = glm::mat4(1.0f);
@@ -284,9 +272,9 @@ void CEnemy2D::Render(void)
 {
 	if (!bIsActive)
 		return;
-
-	// Call the parent's Render()
-	CEntity2D::Render();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
+	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 1.0f));
 }
 
 /**
@@ -316,11 +304,8 @@ void CEnemy2D::SetPlayer2D(CPlayer2D* pPlayer2D)
 /**
  @brief PrintSelf
  */ 
-void CEnemy2D::PrintSelf(string className)
+void CEnemy2D::PrintSelf()
 {
-	cout << className << "::PrintSelf()" << endl;
-	cout << "=======================" << endl;
-
 	cPhysics2D.PrintSelf();
 
 	cout << "vec2Position\t=\t[" << vec2Position.x << ", " << vec2Position.y << "]" << endl;
@@ -402,6 +387,11 @@ void CEnemy2D::FlipHorizontalDirection(void)
 	vec2Direction.x *= -1;
 }
 
+void CEnemy2D::FlipVerticalDirection(void)
+{
+	vec2Direction.y *= -1;
+}
+
 /**
 @brief Update position.
 */
@@ -439,6 +429,18 @@ void CEnemy2D::UpdatePosition(void)
 	}
 }
 
+void CEnemy2D::UpdateFacingDirection()
+{
+	if (vec2MovementVelocity.x > 0)
+		eFacingDirection = DIRECTION::RIGHT;
+	else if (vec2MovementVelocity.x < 0)
+		eFacingDirection = DIRECTION::LEFT;
+	else if (vec2MovementVelocity.y > 0)
+		eFacingDirection = DIRECTION::UP;
+	else if (vec2MovementVelocity.y < 0)
+		eFacingDirection = DIRECTION::DOWN;
+}
+
 
 /**
 @brief Calculate Direction using coordinates, not indices
@@ -458,7 +460,7 @@ glm::vec2 CEnemy2D::CalculateDirection(const glm::vec2 vec2StartPosition, const 
 	return glm::vec2(0);
 }
 
-void CEnemy2D::UpdateFSM() {
+void CEnemy2D::UpdateFSM(float dElapsedTime) {
 //// Get updates from AI
 //switch (sCurrentFSM)
 //{
@@ -611,9 +613,4 @@ void CEnemy2D::UpdateFSM() {
    //default:
    //	break;
    //}
-}
-
-bool CEnemy2D::IsFlying()
-{
-	return false;
 }

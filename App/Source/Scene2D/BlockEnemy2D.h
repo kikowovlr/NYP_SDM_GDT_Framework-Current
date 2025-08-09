@@ -48,22 +48,10 @@ public:
 	// PostRender
 	void PostRender(void) override;
 
-	// boolean flag to indicate if this enemy is active
-	bool bIsActive;
-
 	// PrintSelf
-	void PrintSelf(string className) override;
+	void PrintSelf() override;
 
 protected:
-	enum DIRECTION
-	{
-		LEFT = 0,
-		RIGHT = 1,
-		UP = 2,
-		DOWN = 3,
-		NUM_DIRECTIONS
-	};
-
 	enum FSM
 	{
 		IDLE = 0,
@@ -80,10 +68,26 @@ protected:
 
 	// Current FSM
 	FSM sCurrentFSM;
+
+	float runMultiplier = 2.f;
 	
 	// max amt of time in each state
 	float maxIdleTime = 4.0f;
-	float maxPatrolTime = 4.0f;
+	float maxPatrolTime = 5.0f;
+
+	// store patrol points
+	std::vector<glm::vec2> patrolPoints; // patrol waypoints (world coord)
+	int currentPatrolPointIndex = 0;
+	float patrolThreshold = 2.f;
+	bool reversePatrolPath = false;
+
+	float lastFindBlockTimer = 0.f;
+	float maxLastFoundBlockTime = 20.f;
+
+	float detectionRadius = 100.f; // radius of which this enemy can detect the tiles
+
+	bool isSurprised = false;
+	bool isHoldingBlock = false;
 
 	// Let enemy2D interact with the player
 	bool InteractWithPlayer(void) override;
@@ -95,8 +99,12 @@ protected:
 	void UpdateDirection(void) override;
 
 	// Update position
-	void UpdatePosition(void);
+	void UpdatePosition(void) override;
 
-	void UpdateFSM() override;
+	void UpdateSpriteAnimation() override;
+
+	void UpdateFSM(float dElapsedTime) override;
+
+	void SetupPatrolPoints(std::vector<glm::vec2> points);
 };
 

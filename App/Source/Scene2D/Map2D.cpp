@@ -614,6 +614,19 @@ int CMap2D::GetMapInfo(const unsigned int uiRow, const unsigned int uiCol, const
 		return arrMapInfo[uiCurLevel][uiRow][uiCol].value;
 }
 
+glm::vec2 CMap2D::GetWorldPositionFromTile(const glm::vec2& tilePos)
+{
+	// tilePos.x = column, tilePos.y = row
+
+	// Calculate position at top-left corner of the tile
+	glm::vec2 worldPos = glm::vec2(tilePos.x * GetTileSize().x, tilePos.y * GetTileSize().y);
+
+	// Add half tile size to get to the center of the tile
+	worldPos += GetTileHalfSize();
+
+	return worldPos;
+}
+
 /**
  @brief Load a map
  */ 

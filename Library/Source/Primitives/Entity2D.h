@@ -72,6 +72,8 @@ public:
 	void SetName(const std::string& name) { this->name = name; }
 	std::string GetName() const { return name; }
 
+	unsigned int GetUniqueID() const;
+
 protected:
 	// Name of Shader Program instance
 	std::string sShaderName;
@@ -101,4 +103,7 @@ protected:
 	bool bStatus;
 
 	std::string name = "Unnamed Entity";
+
+	unsigned int uniqueID;
+	static unsigned int nextID;
 };

@@ -50,9 +50,9 @@ protected:
 	// The map containing all the items
 	std::map<std::string, CInventoryItem*> inventoryMap;
 
-	std::unordered_map<CEntity2D*, std::map<std::string, CInventoryItem*>> characterInventories;
-	CEntity2D* activeCharacter = nullptr;
+	std::unordered_map<unsigned int, std::map<std::string, CInventoryItem*>> characterInventories;
+	unsigned int activeCharacterID;
 	
 private:
-	void DebugPrintCharacterInventory(CEntity2D* character, const std::string& charName) const;
+	void DebugPrintCharacterInventory(int characterID, const std::string& charName) const;
 };

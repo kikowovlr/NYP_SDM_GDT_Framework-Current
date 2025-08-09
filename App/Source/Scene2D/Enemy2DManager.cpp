@@ -4,6 +4,7 @@
  Date: March 2023
  */
 #include "Enemy2DManager.h"
+#include "BlockEnemy2D.h"
 
 #include <iostream>
 using namespace std;
@@ -49,15 +50,27 @@ bool CEnemy2DManager::Init(void)
 {
 	// Clear the vector
 	vEnemy2D.clear();
-
+	
+	float blocksmithNum = 2;
+	float statueNum = 2;
+	float droneNum = 2;
+	uiTotalElements = blocksmithNum + statueNum + droneNum;
 	// Reserve the size of the vector
 	vEnemy2D.reserve(uiTotalElements);
 
 	// Create the instances of CEnemy2D* and store them in the vector
-	for (unsigned int i = 0; i < uiTotalElements; i++)
+	for (unsigned int i = 0; i < blocksmithNum; i++)
 	{
-		vEnemy2D.push_back(new CEnemy2D());
+		vEnemy2D.push_back(new CBlockEnemy2D());
 	}
+	//for (unsigned int i = 0; i < statueNum; i++)
+	//{
+	//	vEnemy2D.push_back(new CBlockEnemy2D());
+	//}
+	//for (unsigned int i = 0; i < droneNum; i++)
+	//{
+	//	vEnemy2D.push_back(new CBlockEnemy2D());
+	//}
 	return true;
 }
 

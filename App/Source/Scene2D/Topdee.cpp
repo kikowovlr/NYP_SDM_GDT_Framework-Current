@@ -21,6 +21,8 @@ using namespace std;
 // Include Game Manager
 #include "GameManager.h"
 
+#include "BlockInfo.cpp"
+
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
  */
@@ -141,6 +143,8 @@ bool CTopdee::Init(void)
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
+	SetName("TOPDEE");
+
 	// Get the handler to the CInventoryManager instance
 	pInventoryManager = CInventoryManager::GetInstance();
 	// Bind to topdee invetory
@@ -157,8 +161,6 @@ bool CTopdee::Init(void)
 	pCharacterManager = CharacterManager::GetInstance();
 
 	pSoundController = CSoundController::GetInstance();
-
-	SetName("TOPDEE");
 
 	return true;
 }
@@ -498,24 +500,51 @@ void CTopdee::PickUpOrPutDownBlock()
 	pInventoryManager->BindToCharacter(this);
 	pInventoryItem = pInventoryManager->GetItem("Crate");
 
+	glm::vec2 cratePos = glm::vec2(iFacingTileX * 25.0f + 12.5f, iFacingTileY * 25.0f + 12.5f);
+
 	// no block in inventory > pick up block
 	if (pInventoryItem->GetCount() <= 0)
 	{
 		// Check if the CENTER of the facing tile has a crate (ID 102) within 25.0f units
-		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 102 &&
-			glm::distance(vec2Position, glm::vec2(iFacingTileX * 25.0f + 12.5f, iFacingTileY * 25.0f + 12.5f)) <= 26.0f) { // 26 for leeway
+		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 102 && glm::distance(vec2Position, cratePos) <= 26.0f) { // 26 for leeway
 			// Remove from map
 			pMap2D->SetMapInfo(iFacingTileY, iFacingTileX, 0);
 			pInventoryItem->Add(1);
+
+			// update crates
+			for (auto& crate : crateInfos)
+			{
+				// check which crate was picked up
+				if (glm::distance(crate.currentPos, cratePos) < 12.5f)
+				{
+					crate.isInInventory = true;
+					crate.currentPos = glm::vec2(-1, -1); // set to invalid pos
+					break;
+				}
+			}
 		}
 	}
 	// block in inventory > put down block
 	else
 	{
 		// check if facing tile is empty
-		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 0) {
+		if (pMap2D->GetMapInfo(iFacingTileY, iFacingTileX) == 0) 
+		{
 			pMap2D->SetMapInfo(iFacingTileY, iFacingTileX, 102);
 			pInventoryItem->Remove(1);
+
+			// update crates
+			for (auto& crate : crateInfos)
+			{
+				// check which crate was put down
+				if (crate.isInInventory)
+				{
+					crate.isInInventory = false;
+					crate.currentPos = cratePos; // set to invalid pos
+					crate.hasMoved = true;
+					break;
+				}
+			}
 		}
 	}
 }

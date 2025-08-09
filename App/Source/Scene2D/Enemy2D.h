@@ -29,6 +29,9 @@ class CTopdee;
 
 #include "InventoryManager.h"
 
+// Include AnimatedSprites
+#include "Primitives/SpriteAnimation.h"
+
 class CEnemy2D : public CEntity2D
 {
 public:
@@ -60,7 +63,7 @@ public:
 	bool bIsActive;
 
 	// PrintSelf
-	virtual void PrintSelf(string className);
+	virtual void PrintSelf();
 
 	// The vec2 which stores the halfsize of an Entity2D in the Map2D; with reference to the origin which is the centre.
 	const glm::vec2 vec2HalfSize = glm::vec2(12.5f, 12.5f);
@@ -74,6 +77,8 @@ protected:
 		DOWN = 3,
 		NUM_DIRECTIONS
 	};
+	DIRECTION eFacingDirection;
+	DIRECTION lastDirection;
 	
 	glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 250.0f);
 	glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
@@ -103,12 +108,6 @@ protected:
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
 
-	//// FSM counter - count how many frames it has been in this FSM
-	//int iFSMCounter;
-
-	//// Max count in a state
-	//const int iMaxFSMCounter = 60;
-
 	// track how long has it been in this FSM
 	float stateTimer = 0.0f;
 
@@ -123,17 +122,21 @@ protected:
 
 	// Flip horizontal direction. For patrol use only
 	void FlipHorizontalDirection(void);
+	void FlipVerticalDirection(void);
 
 	// Update position
 	virtual void UpdatePosition(void);
 
+	virtual void UpdateSpriteAnimation() = 0;
+
+	void UpdateFacingDirection();
+
 	// Calculate Direction using coordinates, not indices
 	glm::vec2 CalculateDirection(const glm::vec2 vec2StartPosition, const glm::vec2 vec2EndPosition);
 
-	virtual void UpdateFSM();
+	virtual void UpdateFSM(float dElapsedTime);
 
-	virtual bool IsFlying(); // override this if enemy is supposed to be flying
-
-	double dElapsedTimeSinceLastPathFind = 0.f;
+	float dElapsedTimeSinceLastPathFind = 0.25f;
+	float pathFindInterval = 0.25f;
 };
 

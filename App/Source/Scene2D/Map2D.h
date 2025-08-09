@@ -131,6 +131,8 @@ public:
 	// Get the value at certain indices in the arrMapInfo
 	int GetMapInfo(const unsigned int uiRow, const unsigned int uiCol, const bool bInvert = true) const;
 
+	glm::vec2 GetWorldPositionFromTile(const glm::vec2& tilePos);
+
 	// Load a map
 	bool LoadMap(string filename, const unsigned int uiLevel = 0);
 

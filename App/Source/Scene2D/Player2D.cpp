@@ -148,6 +148,8 @@ bool CPlayer2D::Init(void)
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
+	SetName("TOODEE");
+
 	// Get the handler to the CInventoryManager instance
 	pInventoryManager = CInventoryManager::GetInstance();
 
@@ -172,7 +174,6 @@ bool CPlayer2D::Init(void)
 
 	pMusicPlayer = CMusicPlayer::GetInstance();
 
-	SetName("TOODEE");
 
 	return true;
 }
