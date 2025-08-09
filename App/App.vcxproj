@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Scene2D\BlockEnemy2D.cpp" />
     <ClCompile Include="Source\SoundController\CDelayedSound.cpp" />
     <ClCompile Include="Source\MusicPlayer.cpp" />
     <ClCompile Include="Source\Scene2D\CharacterManager.cpp" />
@@ -33,6 +34,7 @@
     <ClCompile Include="Source\SoundController\SoundInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Scene2D\BlockEnemy2D.h" />
     <ClInclude Include="Source\SoundController\CDelayedSound.h" />
     <ClInclude Include="Source\MusicPlayer.h" />
     <ClInclude Include="Source\Scene2D\CharacterStates.h" />

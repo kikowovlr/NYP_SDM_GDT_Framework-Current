@@ -135,7 +135,7 @@ bool CPlayer2D::Init(void)
 	}
 
 	//CS: Create the animated sprite and setup the animation 
-	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(6, 3);// , pSettings->TILE_WIDTH, pSettings->TILE_HEIGHT);
+	pAnimatedSprites = CMeshBuilder::GenerateSpriteAnimation(6, 3);
 	pAnimatedSprites->AddAnimation("idle-right", 0, 2);
 	pAnimatedSprites->AddAnimation("idle-left", 3, 5);
 	pAnimatedSprites->AddAnimation("walk-right", 6, 8);
@@ -228,22 +228,6 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		}
 		isGunTileFound = true;
 	}
-
-	//if (!isSpikePositionsFound)
-	//{
-	//	std::vector<glm::vec2> spikeLocalPos = pMap2D->FindAllValues(28);
-	//	for (const auto& pos : spikeLocalPos)
-	//	{
-	//		if (pos.y == 1) {
-	//			glm::vec2 worldPos = glm::vec2(
-	//				pos.x * pMap2D->GetTileSize().x,
-	//				pos.y * pMap2D->GetTileSize().y
-	//			);
-	//			spikePositions.push_back(worldPos);
-	//		}
-	//	}
-	//	isSpikePositionsFound = true;
-	//}
 
 	// Update timers
 	if (m_bWallJumpCooldown) {

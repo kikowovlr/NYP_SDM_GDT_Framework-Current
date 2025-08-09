@@ -261,23 +261,42 @@ bool CPhysics2D::Update(const double dElapsedTime)
 	if (sCurrentVerticalStatus == VERTICALSTATUS::IDLE)
 		return false;
 
-	// For a new jump, we skip the assigning of vec2FinalVelocity to vec2InitialVelocity
-	if (bNewJump == true)
+	// if enemy is flying -> ignore gravity 
+	if (sCurrentVerticalStatus == VERTICALSTATUS::FLY)
 	{
-		// And we set bNewJump to true
-		bNewJump = false;
+		if (bNewJump == true)
+		{
+			bNewJump = false;
+		}
+		else 
+		{
+			vec2InitialVelocity = vec2FinalVelocity;
+		}
+
+		// no gravity applied for flying
+		// apply velocity and displacement directly
+		vec2Displacement = float(dElapsedTime) * vec2FinalVelocity;
 	}
-	else
+	else 
 	{
-		// Store the initial velocity to the final velocity
-		vec2InitialVelocity = vec2FinalVelocity;
+		// For a new jump, we skip the assigning of vec2FinalVelocity to vec2InitialVelocity
+		if (bNewJump == true)
+		{
+			// And we set bNewJump to true
+			bNewJump = false;
+		}
+		else
+		{
+			// Store the initial velocity to the final velocity
+			vec2InitialVelocity = vec2FinalVelocity;
+		}
+
+		// Calculate the final velocity
+		vec2FinalVelocity = vec2InitialVelocity + float(dElapsedTime) * vec2Gravity; // gravity applied if not flying
+
+		// Calculate the displacement
+		vec2Displacement = float(dElapsedTime) * vec2FinalVelocity;
 	}
-
-	// Calculate the final velocity
-	vec2FinalVelocity = vec2InitialVelocity + float(dElapsedTime) * vec2Gravity;
-
-	// Calculate the displacement
-	vec2Displacement = float(dElapsedTime) * vec2FinalVelocity;
 
 	return true;
 }

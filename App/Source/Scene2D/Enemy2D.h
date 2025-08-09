@@ -25,6 +25,7 @@ class CMap2D;
 
 // Include Player2D
 class CPlayer2D;
+class CTopdee;
 
 #include "InventoryManager.h"
 
@@ -38,19 +39,19 @@ public:
 	virtual ~CEnemy2D(void);
 
 	// Init
-	bool Init(void);
+	virtual bool Init(void);
 
 	// Update
-	bool Update(const double dElapsedTime);
+	virtual bool Update(const double dElapsedTime);
 
 	// PreRender
-	void PreRender(void);
+	virtual void PreRender(void);
 
 	// Render
-	void Render(void);
+	virtual void Render(void);
 
 	// PostRender
-	void PostRender(void);
+	virtual void PostRender(void);
 
 	// Set the handle to cPlayer to this class instance
 	void SetPlayer2D(CPlayer2D* pPlayer2D);
@@ -59,7 +60,7 @@ public:
 	bool bIsActive;
 
 	// PrintSelf
-	void PrintSelf(void);
+	virtual void PrintSelf(string className);
 
 	// The vec2 which stores the halfsize of an Entity2D in the Map2D; with reference to the origin which is the centre.
 	const glm::vec2 vec2HalfSize = glm::vec2(12.5f, 12.5f);
@@ -73,18 +74,9 @@ protected:
 		DOWN = 3,
 		NUM_DIRECTIONS
 	};
-
-	enum FSM
-	{
-		IDLE = 0,
-		PATROL = 1,
-		ATTACK = 2,
-		ESCAPE = 3,
-		NUM_FSM
-	};
 	
-	const glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 250.0f);
-	const glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
+	glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 250.0f);
+	glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
 
 	glm::vec2 vec2MovementVelocity;
 
@@ -96,18 +88,20 @@ protected:
 	// Handler to the CMap2D instance
 	CMap2D* pMap2D;
 
+	//CS: Animated Sprite
+	CSpriteAnimation* pAnimatedSprites;
+
 	// Physics
 	CPhysics2D cPhysics2D;
 
 	// Handle to the CPlayer2D
 	CPlayer2D* pPlayer2D;
 
+	CTopdee* pTopdee;
+
 	CInventoryManager* pInventoryManager;
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
-
-	// Current FSM
-	FSM sCurrentFSM;
 
 	//// FSM counter - count how many frames it has been in this FSM
 	//int iFSMCounter;
@@ -117,25 +111,28 @@ protected:
 
 	// track how long has it been in this FSM
 	float stateTimer = 0.0f;
-	float maxStateTime = 4.0f; // 4 seconds
 
 	// Let enemy2D interact with the player
-	bool InteractWithPlayer(void);
+	virtual bool InteractWithPlayer(void) = 0;
 
 	// Let enemy2D interact with the map
-	void InteractWithMap();
+	virtual void InteractWithMap() = 0;
 
 	// Update direction
-	void UpdateDirection(void);
+	virtual void UpdateDirection(void) = 0;
 
 	// Flip horizontal direction. For patrol use only
 	void FlipHorizontalDirection(void);
 
 	// Update position
-	void UpdatePosition(void);
+	virtual void UpdatePosition(void);
 
 	// Calculate Direction using coordinates, not indices
 	glm::vec2 CalculateDirection(const glm::vec2 vec2StartPosition, const glm::vec2 vec2EndPosition);
+
+	virtual void UpdateFSM();
+
+	virtual bool IsFlying(); // override this if enemy is supposed to be flying
 
 	double dElapsedTimeSinceLastPathFind = 0.f;
 };

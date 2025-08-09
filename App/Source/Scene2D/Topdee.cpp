@@ -180,9 +180,9 @@ bool CTopdee::Reset()
 	vec2Position = glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
 		uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y);
 
-	//Set it to fall upon entering new level
+	//Set it to idle upon entering new level
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
 
 	//CS: Play the "front" animation as default
 	pAnimatedSprites->PlayAnimation("front", -1, 1.0f);

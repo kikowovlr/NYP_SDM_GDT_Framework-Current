@@ -27,6 +27,7 @@ using namespace std;
 
 // Include Player2D
 #include "Player2D.h"
+#include "Topdee.h"
 
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
@@ -38,10 +39,10 @@ CEnemy2D::CEnemy2D(void)
 	, vec2MovementVelocity(glm::vec2(1, 1))
 	, pMap2D(NULL)
 	, pPlayer2D(NULL)
-	, sCurrentFSM(FSM::IDLE)
-	//, iFSMCounter(0)
 	, pInventoryManager(NULL)
 	, pInventoryItem(NULL)
+	, pTopdee(NULL)
+	, pAnimatedSprites(NULL)
 {
 	// Initialise position of the enemy
 	vec2Position = glm::vec2(0);
@@ -67,6 +68,12 @@ CEnemy2D::~CEnemy2D(void)
 
 	// We won't delete this since it was created elsewhere
 	pInventoryManager = NULL;
+
+	pInventoryItem = NULL;
+
+	pTopdee = NULL;
+
+	pAnimatedSprites = NULL;
 }
 
 /**
@@ -84,6 +91,9 @@ bool CEnemy2D::Init(void)
 	// Get the handler to the CPlayer2D instance
 	pPlayer2D = CPlayer2D::GetInstance();
 
+	pTopdee = CTopdee::GetInstance();
+
+	// !!!
 	// Update Direction so it goes to the pPlayer2D
 	UpdateDirection();
 
@@ -97,34 +107,16 @@ bool CEnemy2D::Init(void)
 	//CS: Create the Quad Mesh using the mesh builder
 	p2DMesh = CMeshBuilder::GenerateQuad(glm::vec4(1, 1, 1, 1), 1, 1);
 
-	// Load the enemy2D texture
-	iTextureID = CImageLoader::GetInstance()->LoadTextureGetID("Image/Scene2D_EnemyTile.tga", true);
-	if (iTextureID == 0)
-	{
-		cout << "Unable to load Image/Scene2D_EnemyTile.tga" << endl;
-		return false;
-	}
-
 	//CS: Init the colour to white
 	vec4ColourTint = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
 	pInventoryManager = CInventoryManager::GetInstance();
-	
-	pInventoryManager->BindToCharacter(this);
-	pInventoryItem = pInventoryManager->Add("Health", "Image/Scene2D_Health.tga", 100, 100);
-	pInventoryItem->vec2Size = glm::vec2(25, 25);
-	
 
 	// Set the Physics to fall status by default
 	cPhysics2D.Init();
-	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
-	cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
 
 	// If this class is initialised properly, then set the bIsActive to true
 	bIsActive = true;
-
-	SetName("NPC");
-
 
 	return true;
 }
@@ -139,183 +131,34 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	if (!bIsActive)
 		return false;
 
-	int currHealth = pInventoryManager->GetItem("Health")->GetCount();
-
 	// Reset vec2MovementVelocity
 	vec2MovementVelocity = glm::vec2(0.0f);
 	// Set the physics horizontal status to idle
 	cPhysics2D.SetHorizontalStatus(CPhysics2D::HORIZONTALSTATUS::IDLE);
 
-	// Get updates from AI
-	switch (sCurrentFSM)
+	UpdateFSM(); // update fsm states
+
+	// only account for jump/fall if not able to fly
+	if (!IsFlying())
 	{
-	case IDLE:
-		if (currHealth <= 30)
-		{
-			// if health drops to 30% and below, enter ESCAPE mode
-			sCurrentFSM = ESCAPE;
-			stateTimer = 0.0f;
-			cout << "Switching to Escape State" << endl;
-		}
-		else if (stateTimer > maxStateTime)
-		{
-			sCurrentFSM = PATROL;
-			stateTimer = 0.0f;
-
-			cout << "Switching to Patrol State" << endl;
-		}
-		stateTimer += dElapsedTime;
-		break;
-	case PATROL:
-		if (currHealth <= 30)
-		{
-			// if health drops to 30% and below, enter ESCAPE mode
-			sCurrentFSM = ESCAPE;
-			stateTimer = 0.0f;
-			cout << "Switching to Escape State" << endl;
-		}
-		else if (stateTimer > maxStateTime)
-		{
-			sCurrentFSM = IDLE;
-			stateTimer = 0.0f;
-			cout << "Switching to Idle State" << endl;
-		}
-		else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
-		{
- 			sCurrentFSM = ATTACK;
-			stateTimer = 0.0f;
-			cout << "Switching to Attack State" << endl;
-		}
-		else
-		{
-			// Patrol around
-			// Update the Enemy2D's position for patrol
-			UpdatePosition();
-		}
-		stateTimer += dElapsedTime;
-		break;
-	case ATTACK:
-		if (currHealth <= 30)
-		{
-			// if health drops to 30% and below, enter ESCAPE mode
-			sCurrentFSM = ESCAPE;
-			stateTimer = 0.0f;
-			cout << "Switching to Escape State" << endl;
-		}
-		else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
-		{
-			// Attack
-			// find a way to calculate only when the enemy reaches the first grid, then recalculate!!
-			int iStartX = 0;
-			int iStartY = 0;
-			int iTargetX = 0;
-			int iTargetY = 0;
-			if ((pMap2D->GetTileIndexAtPosition(vec2Position, iStartX, iStartY) == true) &&
-				(pMap2D->GetTileIndexAtPosition(pPlayer2D->vec2Position, iTargetX, iTargetY) == true))
-			{
-				// Check if the enemy is at the centre of the column
-				// if not, then move towards it first.
-				// Otherwise, do pathfinding
-				vec2Destination = glm::vec2(iStartX * pMap2D->GetTileSize().x + vec2HalfSize.x, iStartY * pMap2D->GetTileSize().y + vec2HalfSize.y);
-				if (abs(vec2Destination.x - vec2Position.x) > pMap2D->GetSizeTolerance().x)
-				{
-					// Update the Enemy2D's position for attack
-					UpdatePosition();
-					break;
-				}
-
-				// Calculate a path to the player
-				//pMap2D->PrintSelf();
-				//cout << "StartPos: " << iStartX << ", " << iStartY << endl;
-				//cout << "TargetPos: " << iTargetX << ", " << iTargetY << endl;
-				auto path = pMap2D->PathFind(	glm::vec2(iStartX, iStartY), 
-												glm::vec2(iTargetX, iTargetY),
-												heuristic::euclidean,
-												10);
-				dElapsedTimeSinceLastPathFind = 0.25f;
-
-				//cout << "=== Printing out the path ===" << endl;
-
-				// extract points and determine dir for the enemy to travel towards
-				// Calculate new destination
-				bool bFirstPosition = true;
-				glm::vec2 vec2PathPoint;
-				for (const auto& coord : path)
-				{
-					// Take a path point from path via coord
-					vec2PathPoint = coord;
-					if (bFirstPosition == true)
-					{	
-						// Set a destination
-						vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
-						// Calculate the direction between enemy2D and this destination
-						vec2Direction = glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY));
-						bFirstPosition = false;
-					}
-					else
-					{
-						// If the next path point is in the same direction, use it as the new vec2Destination
-						if (glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY)) == vec2Direction)
-						{
-							// Set a destination
-							vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
-						}
-						else
-							break;
-					}
-				}
-
-				//cout << "vec2Destination : " << vec2Destination.x 
-				//		<< ", " << vec2Destination.y << endl;
-				//cout << "vec2Direction : " << vec2Direction.x 
-				//		<< ", " << vec2Direction.y << endl;
-				//system("pause");
-
-				// Update the Enemy2D's position for attack
-				UpdatePosition();
-			}
-
-			if (dElapsedTimeSinceLastPathFind < 0.25f)
-				dElapsedTimeSinceLastPathFind += dElapsedTime;
-		}
-		else
-		{
-			if (stateTimer > maxStateTime)
-			{
-				sCurrentFSM = PATROL;
-				stateTimer = 0.0f;
-				cout << "ATTACK : Reset timer: " << stateTimer << endl;
-			}
-			stateTimer += dElapsedTime;
-		}
-		break;
-	case ESCAPE:
-		// Move to health pack item
-
-		cout << "Moving to health pack" << endl;
-		stateTimer += dElapsedTime;
-		break;
-	default:
-		break;
-	}
-
-	// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
-	if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-		&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::FALL))
-	{
-		// Update the elapsed time to the physics engine
-		cPhysics2D.AddElapsedTime((float)dElapsedTime);
-		// Call the physics engine update method to calculate the final velocity and displacement
-		cPhysics2D.Update(dElapsedTime);
-		// Get the displacement from the physics engine and update the player position
-		vec2MovementVelocity += cPhysics2D.GetFinalVelocity();
-
-		// Set the physics vertical status from jump/double jump to fall if the movement direction changes to negative
+		// Calculate the physics for JUMP/DOUBLE JUMP/FALL movement
 		if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
-			&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+			&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::FALL))
 		{
-			if (cPhysics2D.GetFinalVelocity().y < 0.0f)
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL, false);
+			// Update the elapsed time to the physics engine
+			cPhysics2D.AddElapsedTime((float)dElapsedTime);
+			// Call the physics engine update method to calculate the final velocity and displacement
+			cPhysics2D.Update(dElapsedTime);
+			// Get the displacement from the physics engine and update the player position
+			vec2MovementVelocity += cPhysics2D.GetFinalVelocity();
+
+			// Set the physics vertical status from jump/double jump to fall if the movement direction changes to negative
+			if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP)
+				&& (cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+			{
+				if (cPhysics2D.GetFinalVelocity().y < 0.0f)
+					cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL, false);
+			}
 		}
 	}
 
@@ -337,35 +180,43 @@ bool CEnemy2D::Update(const double dElapsedTime)
 			FlipHorizontalDirection();
 		}
 
-		if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
+		// only let entity fall if they arent able to fly
+		if (!IsFlying())
 		{
-			// Check if he is walking on air; let him fall down
-			glm::vec2 vec2InAirPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y);
-			if (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2InAirPosition, fCollisionCoordY) == CSettings::RESULTS::NEGATIVE)
+			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::IDLE)
 			{
-				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+				// Check if he is walking on air; let him fall down
+				glm::vec2 vec2InAirPosition = vec2Position - glm::vec2(0.0f, vec2HalfSize.y);
+				if (pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2InAirPosition, fCollisionCoordY) == CSettings::RESULTS::NEGATIVE)
+				{
+					cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+				}
 			}
 		}
 	}
 
-	// Check for collision with the Tile Maps vertically
-	if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP) &&
-		(cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP) &&
-		(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
+	// let flying enemies go through walls
+	if (!IsFlying())
 	{
-		if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+		// Check for collision with the Tile Maps vertically
+		if ((cPhysics2D.GetVerticalStatus() >= CPhysics2D::VERTICALSTATUS::JUMP) &&
+			(cPhysics2D.GetVerticalStatus() <= CPhysics2D::VERTICALSTATUS::DOUBLEJUMP) &&
+			(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
 		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+			if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+			{
+				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+			}
 		}
-	}
 
-	// Check for collision with the Tile Maps vertically
-	if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL) &&
-		(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
-	{
-		if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+		// Check for collision with the Tile Maps vertically
+		if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL) &&
+			(pMap2D->CheckVerticalCollision(vec2Position, vec2HalfSize, vec2NewPosition, fCollisionCoordY) == CSettings::RESULTS::POSITIVE))
 		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+			if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+			{
+				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+			}
 		}
 	}
 
@@ -375,17 +226,21 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	// Constraint the enemy within the map
 	if (pMap2D->Constraint(vec2Position) == true)
 	{
-		if (vec2MovementVelocity.y > 0.0f)
+		// If NOT flying, apply vertical constraints (gravity/falling)
+		if (!IsFlying())
 		{
-			vec2MovementVelocity.y = 0.0f;
-		}
-		if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
-		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
-		}
-		else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
-		{
-			cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+			if (vec2MovementVelocity.y > 0.0f)
+			{
+				vec2MovementVelocity.y = 0.0f;
+			}
+			if ((cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::JUMP) || (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::DOUBLEJUMP))
+			{
+				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::FALL);
+			}
+			else if (cPhysics2D.GetVerticalStatus() == CPhysics2D::VERTICALSTATUS::FALL)
+			{
+				cPhysics2D.SetVerticalStatus(CPhysics2D::VERTICALSTATUS::IDLE);
+			}
 		}
 	}
 
@@ -398,13 +253,7 @@ bool CEnemy2D::Update(const double dElapsedTime)
 	// Update the model
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(vec2Position, 0.0f));
-
-	//model = glm::translate(model, glm::vec3(0.5f * pSettings->TILE_WIDTH, 0.5f * pSettings->TILE_HEIGHT, 0.0f));
-	//model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f));
-	//model = glm::translate(model, glm::vec3(-0.5f * pSettings->TILE_WIDTH, -0.5f * pSettings->TILE_HEIGHT, 0.0f));
-
 	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 1.0f));
-
 
 	return true;
 }
@@ -467,76 +316,83 @@ void CEnemy2D::SetPlayer2D(CPlayer2D* pPlayer2D)
 /**
  @brief PrintSelf
  */ 
-void CEnemy2D::PrintSelf(void)
+void CEnemy2D::PrintSelf(string className)
 {
-	cout << "CEnemy2D::PrintSelf()" << endl;
+	cout << className << "::PrintSelf()" << endl;
 	cout << "=======================" << endl;
+
+	cPhysics2D.PrintSelf();
 
 	cout << "vec2Position\t=\t[" << vec2Position.x << ", " << vec2Position.y << "]" << endl;
 	cout << "vec2Destination\t=\t[" << vec2Destination.x << ", " << vec2Destination.y << "]" << endl;
 	cout << "vec2Direction\t=\t[" << vec2Direction.x << ", " << vec2Direction.y << "]" << endl;
 	cout << "vec2MovementVelocity\t=\t[" << vec2MovementVelocity.x << ", " << vec2MovementVelocity.y << "]" << endl;
-	cout << "sCurrentFSM\t=\t" << sCurrentFSM << endl;
-	
-	cPhysics2D.PrintSelf();
 }
 
 /**
  @brief Let enemy2D interact with the player.
  */
-bool CEnemy2D::InteractWithPlayer(void)
-{
-	// Check if the enemy2D is within 1 tile size of the player2D
-	if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 2.0f)
-	{
-		cout << "Gotcha!" << endl;
-		pInventoryManager->BindToCharacter(this);
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Remove(20);
-		// Since the player has been caught, then reset the FSM
-		sCurrentFSM = IDLE;
-		stateTimer = 0.0f;
-		return true;
-	}
+//bool CEnemy2D::InteractWithPlayer(void)
+//{
+//	// Check if the enemy2D is within 1 tile size of the player2D
+//	if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 2.0f)
+//	{
+//		cout << "Gotcha!" << endl;
+//		pInventoryManager->BindToCharacter(this);
+//		pInventoryItem = pInventoryManager->GetItem("Health");
+//		pInventoryItem->Remove(20);
+//		// Since the player has been caught, then reset the FSM
+//		sCurrentFSM = IDLE;
+//		stateTimer = 0.0f;
+//		return true;
+//	}
+//
+//	return false;
+//}
 
-	return false;
-}
-
-void CEnemy2D::InteractWithMap() 
-{
-	int iPositionX = 0;
-	int iPositionY = 0;
-	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
-		return;
-
-	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
-	{
-	case 21: // health pack
-		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
-		// Increase the health
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Add(20);
-		break;
-	case 28: // spike
-		pInventoryItem = pInventoryManager->GetItem("Health");
-		pInventoryItem->Remove(1);
-		break;
-	default:
-		break;
-	}
-}
+//void CEnemy2D::InteractWithMap() 
+//{
+//	int iPositionX = 0;
+//	int iPositionY = 0;
+//	if (pMap2D->GetTileIndexAtPosition(vec2Position, iPositionX, iPositionY) == false)
+//		return;
+//
+//	switch (pMap2D->GetMapInfo(iPositionY, iPositionX))
+//	{
+//	case 21: // health pack
+//		pMap2D->SetMapInfo(iPositionY, iPositionX, 0);
+//		// Increase the health
+//		pInventoryItem = pInventoryManager->GetItem("Health");
+//		pInventoryItem->Add(20);
+//		break;
+//	case 28: // spike
+//		pInventoryItem = pInventoryManager->GetItem("Health");
+//		pInventoryItem->Remove(1);
+//		break;
+//	default:
+//		break;
+//	}
+//}
 
 /**
  @brief Update the enemy's direction.
  */
-void CEnemy2D::UpdateDirection(void)
-{
-	// Set the destination to the player
-	vec2Destination = pPlayer2D->vec2Position;
-
-	// Calculate the direction between enemy2D and player2D
-	vec2Direction = CalculateDirection(vec2Position, vec2Destination);
-}
+//void CEnemy2D::UpdateDirection(void)
+//{
+//	if (glm::distance(vec2Position, pPlayer2D->vec2Position) > glm::distance(vec2Position, pTopdee->vec2Position))
+//	{
+//		// if toodee closer, set destination as toodee's pos
+//		vec2Destination = pPlayer2D->vec2Position;
+//	}
+//	else
+//	{
+//		// else set destination as topdee
+//		vec2Destination = pTopdee->vec2Position;
+//	}
+//
+//	// Calculate the direction between enemy2D and player2D
+//	vec2Direction = CalculateDirection(vec2Position, vec2Destination);
+//}
 
 /**
  @brief Flip horizontal direction. For patrol use only
@@ -600,4 +456,164 @@ glm::vec2 CEnemy2D::CalculateDirection(const glm::vec2 vec2StartPosition, const 
 		return vec2Direction;
 	}
 	return glm::vec2(0);
+}
+
+void CEnemy2D::UpdateFSM() {
+//// Get updates from AI
+//switch (sCurrentFSM)
+//{
+//case IDLE:
+//	if (currHealth <= 30)
+//	{
+//		// if health drops to 30% and below, enter ESCAPE mode
+//		sCurrentFSM = ESCAPE;
+//		stateTimer = 0.0f;
+//		cout << "Switching to Escape State" << endl;
+//	}
+//	else if (stateTimer > maxStateTime)
+//	{
+//		sCurrentFSM = PATROL;
+//		stateTimer = 0.0f;
+
+//		cout << "Switching to Patrol State" << endl;
+//	}
+//	stateTimer += dElapsedTime;
+//	break;
+//case PATROL:
+//	if (currHealth <= 30)
+//	{
+//		// if health drops to 30% and below, enter ESCAPE mode
+//		sCurrentFSM = ESCAPE;
+//		stateTimer = 0.0f;
+//		cout << "Switching to Escape State" << endl;
+//	}
+//	else if (stateTimer > maxStateTime)
+//	{
+//		sCurrentFSM = IDLE;
+//		stateTimer = 0.0f;
+//		cout << "Switching to Idle State" << endl;
+//	}
+//	else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
+//	{
+//			sCurrentFSM = ATTACK;
+   //		stateTimer = 0.0f;
+   //		cout << "Switching to Attack State" << endl;
+   //	}
+   //	else
+   //	{
+   //		// Patrol around
+   //		// Update the Enemy2D's position for patrol
+   //		UpdatePosition();
+   //	}
+   //	stateTimer += dElapsedTime;
+   //	break;
+   //case ATTACK:
+   //	if (currHealth <= 30)
+   //	{
+   //		// if health drops to 30% and below, enter ESCAPE mode
+   //		sCurrentFSM = ESCAPE;
+   //		stateTimer = 0.0f;
+   //		cout << "Switching to Escape State" << endl;
+   //	}
+   //	else if (glm::distance(vec2Position, pPlayer2D->vec2Position) <= glm::length(vec2HalfSize) * 10.0f)
+   //	{
+   //		// Attack
+   //		// find a way to calculate only when the enemy reaches the first grid, then recalculate!!
+   //		int iStartX = 0;
+   //		int iStartY = 0;
+   //		int iTargetX = 0;
+   //		int iTargetY = 0;
+   //		if ((pMap2D->GetTileIndexAtPosition(vec2Position, iStartX, iStartY) == true) &&
+   //			(pMap2D->GetTileIndexAtPosition(pPlayer2D->vec2Position, iTargetX, iTargetY) == true))
+   //		{
+   //			// Check if the enemy is at the centre of the column
+   //			// if not, then move towards it first.
+   //			// Otherwise, do pathfinding
+   //			vec2Destination = glm::vec2(iStartX * pMap2D->GetTileSize().x + vec2HalfSize.x, iStartY * pMap2D->GetTileSize().y + vec2HalfSize.y);
+   //			if (abs(vec2Destination.x - vec2Position.x) > pMap2D->GetSizeTolerance().x)
+   //			{
+   //				// Update the Enemy2D's position for attack
+   //				UpdatePosition();
+   //				break;
+   //			}
+
+   //			// Calculate a path to the player
+   //			//pMap2D->PrintSelf();
+   //			//cout << "StartPos: " << iStartX << ", " << iStartY << endl;
+   //			//cout << "TargetPos: " << iTargetX << ", " << iTargetY << endl;
+   //			auto path = pMap2D->PathFind(	glm::vec2(iStartX, iStartY), 
+   //											glm::vec2(iTargetX, iTargetY),
+   //											heuristic::euclidean,
+   //											10);
+   //			dElapsedTimeSinceLastPathFind = 0.25f;
+
+   //			//cout << "=== Printing out the path ===" << endl;
+
+   //			// extract points and determine dir for the enemy to travel towards
+   //			// Calculate new destination
+   //			bool bFirstPosition = true;
+   //			glm::vec2 vec2PathPoint;
+   //			for (const auto& coord : path)
+   //			{
+   //				// Take a path point from path via coord
+   //				vec2PathPoint = coord;
+   //				if (bFirstPosition == true)
+   //				{	
+   //					// Set a destination
+   //					vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
+   //					// Calculate the direction between enemy2D and this destination
+   //					vec2Direction = glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY));
+   //					bFirstPosition = false;
+   //				}
+   //				else
+   //				{
+   //					// If the next path point is in the same direction, use it as the new vec2Destination
+   //					if (glm::normalize(vec2PathPoint - glm::vec2(iStartX, iStartY)) == vec2Direction)
+   //					{
+   //						// Set a destination
+   //						vec2Destination = glm::vec2(vec2PathPoint.x * pMap2D->GetTileSize().x, vec2PathPoint.y * pMap2D->GetTileSize().y);
+   //					}
+   //					else
+   //						break;
+   //				}
+   //			}
+
+   //			//cout << "vec2Destination : " << vec2Destination.x 
+   //			//		<< ", " << vec2Destination.y << endl;
+   //			//cout << "vec2Direction : " << vec2Direction.x 
+   //			//		<< ", " << vec2Direction.y << endl;
+   //			//system("pause");
+
+   //			// Update the Enemy2D's position for attack
+   //			UpdatePosition();
+   //		}
+
+   //		if (dElapsedTimeSinceLastPathFind < 0.25f)
+   //			dElapsedTimeSinceLastPathFind += dElapsedTime;
+   //	}
+   //	else
+   //	{
+   //		if (stateTimer > maxStateTime)
+   //		{
+   //			sCurrentFSM = PATROL;
+   //			stateTimer = 0.0f;
+   //			cout << "ATTACK : Reset timer: " << stateTimer << endl;
+   //		}
+   //		stateTimer += dElapsedTime;
+   //	}
+   //	break;
+   //case ESCAPE:
+   //	// Move to health pack item
+
+   //	cout << "Moving to health pack" << endl;
+   //	stateTimer += dElapsedTime;
+   //	break;
+   //default:
+   //	break;
+   //}
+}
+
+bool CEnemy2D::IsFlying()
+{
+	return false;
 }

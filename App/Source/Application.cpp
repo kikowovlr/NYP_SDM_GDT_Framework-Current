@@ -298,7 +298,7 @@ bool Application::Init(void)
 	std::vector<int> bgmIDs = { 1, 2, 3 };
 	pMusicPlayer->SetCustomShuffleLoopIDs(bgmIDs);
 
-	pMusicPlayer->PlayMusic();
+	//pMusicPlayer->PlayMusic();
 
 	// Initialise CScene2D
 	pScene2D = CScene2D::GetInstance();
@@ -430,8 +430,6 @@ void Application::Run(void)
 
 		// Update the FPS Counter
 		pFPSCounter->Update();
-
-		//pMusicPlayer->PlayMusicByID(2);
 
 		// Calculate the delta time since the last frame
 		dElapsedTime = pFPSCounter->GetDeltaTime();

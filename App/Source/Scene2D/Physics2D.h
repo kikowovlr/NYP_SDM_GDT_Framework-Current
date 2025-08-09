@@ -20,6 +20,7 @@ public:
 		JUMP,
 		DOUBLEJUMP,
 		FALL,
+		FLY,
 		NUM_VERTICALSTATUS
 	};
 	enum class HORIZONTALSTATUS : unsigned int
