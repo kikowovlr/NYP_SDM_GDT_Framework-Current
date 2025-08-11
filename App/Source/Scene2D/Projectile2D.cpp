@@ -195,7 +195,7 @@ bool CProjectile2D::Update(const double dElapsedTime)
 	// Update Position
 	vec2Position = vec2Position + vec2Direction * (float)dElapsedTime * fSpeed;
 
-	InteractWithPorts();
+	InteractWithMap();
 
 	// For calculating the collision point's x-coordinate
 	float fCollisionCoordX = 0;
@@ -276,7 +276,7 @@ void CProjectile2D::CalculateRotation()
 	rotationAngle = atan2f(vec2Direction.y, vec2Direction.x);
 }
 
-void CProjectile2D::InteractWithPorts()
+void CProjectile2D::InteractWithMap()
 {
 	int iPositionX = 0;
 	int iPositionY = 0;

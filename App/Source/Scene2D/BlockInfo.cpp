@@ -20,7 +20,7 @@ void InitializeBlockInfos(const CMap2D* pMap2D)
     for (const glm::vec2 tilePos : crateTiles)
     {
         // convert to world pos
-        glm::vec2 worldPos = tilePos * tileSize + tileSize / 2;
+        glm::vec2 worldPos = tilePos * tileSize + tileSize * 0.5f;
 
         BlockInfo block;
         block.defaultPos = worldPos;

@@ -21,7 +21,7 @@ using namespace std;
 // Include Game Manager
 #include "GameManager.h"
 
-#include "BlockInfo.cpp"
+#include "BlockInfo.h"
 
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
@@ -541,6 +541,7 @@ void CTopdee::PickUpOrPutDownBlock()
 				{
 					crate.isInInventory = false;
 					crate.currentPos = cratePos; // set to invalid pos
+					cout << "crate placed down pos -> (x: " << cratePos.x << ", y: " << cratePos.y << endl;
 					crate.hasMoved = true;
 					break;
 				}

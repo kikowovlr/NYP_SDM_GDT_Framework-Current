@@ -14,7 +14,7 @@ using namespace std;
 #include "System\filesystem.h"
 
 #include "Player2D.h"
-#include "BlockInfo.cpp"
+#include "BlockInfo.h"
 
 /**
  @brief Constructor This constructor has protected access modifier as this class will be a Singleton
@@ -135,7 +135,7 @@ bool CScene2D::Init(void)
 	pEnemy2DManager->Init();
 	pEnemy2DManager->SetShader("Shader2D");
 
-	// Create and initialise the CEnemy2D
+	 //Create and initialise the CEnemy2D
 	while (true)
 	{
 		// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
@@ -155,25 +155,43 @@ bool CScene2D::Init(void)
 		}
 	}
 
-	// copy and paste for other numbers
-	//while (true)
-	//{
-	//	// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
-	//	unsigned int uiRow = -1;
-	//	unsigned int uiCol = -1;
-	//	if (pMap2D->FindValue(300, uiRow, uiCol) == false)
-	//		break;	// Stop this loop since there are no more enemies in this map
+	while (true)
+	{
+		// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
+		unsigned int uiRow = -1;
+		unsigned int uiCol = -1;
+		if (pMap2D->FindValue(301, uiRow, uiCol) == false)
+			break;	// Stop this loop since there are no more enemies in this map
 
-	//	// Erase the value of the player in the arrMapInfo
-	//	pMap2D->SetMapInfo(uiRow, uiCol, 0);
+		// Erase the value of the player in the arrMapInfo
+		pMap2D->SetMapInfo(uiRow, uiCol, 0);
 
-	//	int uiIndex = -1;
-	//	if (pEnemy2DManager->Activate(glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
-	//		uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y), uiIndex) == false)
-	//	{
-	//		cout << "Unable to activate an BlockEnemy at [" << uiRow << ", " << uiCol << "]" << endl;
-	//	}
-	//}
+		int uiIndex = -1;
+		if (pEnemy2DManager->Activate(glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
+			uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y), uiIndex) == false)
+		{
+			cout << "Unable to activate an StatueEnemy at [" << uiRow << ", " << uiCol << "]" << endl;
+		}
+	}
+
+	while (true)
+	{
+		// Find the indices for the enemies in arrMapInfo, and assign it to cEnemy2D
+		unsigned int uiRow = -1;
+		unsigned int uiCol = -1;
+		if (pMap2D->FindValue(302, uiRow, uiCol) == false)
+			break;	// Stop this loop since there are no more enemies in this map
+
+		// Erase the value of the player in the arrMapInfo
+		pMap2D->SetMapInfo(uiRow, uiCol, 0);
+
+		int uiIndex = -1;
+		if (pEnemy2DManager->Activate(glm::vec2(uiCol * pMap2D->GetTileSize().x + pMap2D->GetTileHalfSize().x,
+			uiRow * pMap2D->GetTileSize().y + pMap2D->GetTileHalfSize().y), uiIndex) == false)
+		{
+			cout << "Unable to activate an DroneEnemy at [" << uiRow << ", " << uiCol << "]" << endl;
+		}
+	}
 
 	// Store the keyboard controller singleton instance here
 	pKeyboardController = CKeyboardController::GetInstance();

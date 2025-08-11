@@ -32,6 +32,10 @@ class CTopdee;
 // Include AnimatedSprites
 #include "Primitives/SpriteAnimation.h"
 
+#include "ProjectileManager2D.h"
+
+class CEnemy2DManager;
+
 class CEnemy2D : public CEntity2D
 {
 public:
@@ -80,6 +84,9 @@ protected:
 	DIRECTION eFacingDirection;
 	DIRECTION lastDirection;
 	
+
+	bool isRunning = false;
+	float runMultiplier = 2.f;
 	glm::vec2 vec2JumpSpeed = glm::vec2(0.0f, 250.0f);
 	glm::vec2 vec2WalkSpeed = glm::vec2(100.0f, 100.0f);
 
@@ -108,6 +115,10 @@ protected:
 	// InventoryItem
 	CInventoryItem* pInventoryItem;
 
+	CProjectileManager2D* pProjectileManager2D;
+
+	CEnemy2DManager* pEnemyManager2D;
+
 	// track how long has it been in this FSM
 	float stateTimer = 0.0f;
 
@@ -134,7 +145,7 @@ protected:
 	// Calculate Direction using coordinates, not indices
 	glm::vec2 CalculateDirection(const glm::vec2 vec2StartPosition, const glm::vec2 vec2EndPosition);
 
-	virtual void UpdateFSM(float dElapsedTime);
+	virtual void UpdateFSM(float dElapsedTime) = 0;
 
 	float dElapsedTimeSinceLastPathFind = 0.25f;
 	float pathFindInterval = 0.25f;

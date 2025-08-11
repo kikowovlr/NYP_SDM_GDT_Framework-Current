@@ -19,6 +19,8 @@
 // Include vector
 #include <vector>
 
+class CEnemy2D;
+
 class CEnemy2DManager : public CSingletonTemplate<CEnemy2DManager>
 {
 	friend class CSingletonTemplate<CEnemy2DManager>;
@@ -56,6 +58,8 @@ public:
 	// List of CEnemy2D
 	std::vector<CEnemy2D*> vEnemy2D;
 
+	void SetPlayerChased(bool chasing);
+	bool IsPlayerChased() const;
 protected:
 	// Name of Shader Program instance
 	std::string sShaderName;
@@ -71,4 +75,6 @@ protected:
 	CEnemy2DManager(void);
 	// Destructor
 	virtual ~CEnemy2DManager(void);
+
+	bool bPlayerChased = false;
 };

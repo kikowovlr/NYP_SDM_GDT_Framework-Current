@@ -1076,15 +1076,15 @@ std::vector<glm::vec2> CMap2D::PathFind(const glm::vec2& startPos,
 	HeuristicFunction heuristicFunc,
 	const int weight)
 {
-	// Check if the startPos and targetPost are blocked
-	if (isBlocked((unsigned int)startPos.y, (unsigned int)startPos.x) ||
-		(isBlocked((unsigned int)targetPos.y, (unsigned int)targetPos.x)))
-	{
-		cout << "Invalid start or target position." << endl;
-		// Return an empty path
-		std::vector<glm::vec2> path;
-		return path;
-	}
+	//// Check if the startPos and targetPost are blocked
+	//if (isBlocked((unsigned int)startPos.y, (unsigned int)startPos.x) ||
+	//	(isBlocked((unsigned int)targetPos.y, (unsigned int)targetPos.x)))
+	//{
+	//	cout << "Invalid start or target position." << endl;
+	//	// Return an empty path
+	//	std::vector<glm::vec2> path;
+	//	return path;
+	//}
 
 	// Set up the variables and lists
 	vec2StartPos = startPos;

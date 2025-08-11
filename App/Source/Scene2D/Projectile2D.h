@@ -33,6 +33,7 @@ public:
 
 	// Activate the projectile. true == active, false == inactive
 	void SetStatus(const bool bStatus);
+
 	void SetDirection(glm::vec2 vec2Direction);
 	// Set the lifetime of the projectile
 	void SetLifetime(const double dLifetime);
@@ -67,7 +68,7 @@ public:
 	void CalculateRotation();
 
 protected:
-	void InteractWithPorts();
+	void InteractWithMap();
 
 	// Remaining lifetime in seconds
 	double dLifetime;

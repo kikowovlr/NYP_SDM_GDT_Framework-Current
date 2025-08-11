@@ -5,6 +5,8 @@
  */
 #include "Enemy2DManager.h"
 #include "BlockEnemy2D.h"
+#include "StatueEnemy2D.h"
+#include "DroneEnemy2D.h"
 
 #include <iostream>
 using namespace std;
@@ -33,6 +35,16 @@ CEnemy2DManager::~CEnemy2DManager(void)
 	vEnemy2D.clear();
 }
 
+void CEnemy2DManager::SetPlayerChased(bool chasing)
+{
+	bPlayerChased = chasing;
+}
+
+bool CEnemy2DManager::IsPlayerChased() const
+{
+	return bPlayerChased;
+}
+
 /**
  @brief Set a shader to this class instance
  @param _name The name of the Shader instance in the CShaderManager
@@ -51,9 +63,9 @@ bool CEnemy2DManager::Init(void)
 	// Clear the vector
 	vEnemy2D.clear();
 	
-	float blocksmithNum = 2;
-	float statueNum = 2;
-	float droneNum = 2;
+	float blocksmithNum = 1;
+	float statueNum = 1;
+	float droneNum = 1;
 	uiTotalElements = blocksmithNum + statueNum + droneNum;
 	// Reserve the size of the vector
 	vEnemy2D.reserve(uiTotalElements);
@@ -63,14 +75,14 @@ bool CEnemy2DManager::Init(void)
 	{
 		vEnemy2D.push_back(new CBlockEnemy2D());
 	}
-	//for (unsigned int i = 0; i < statueNum; i++)
-	//{
-	//	vEnemy2D.push_back(new CBlockEnemy2D());
-	//}
-	//for (unsigned int i = 0; i < droneNum; i++)
-	//{
-	//	vEnemy2D.push_back(new CBlockEnemy2D());
-	//}
+	for (unsigned int i = 0; i < statueNum; i++)
+	{
+		vEnemy2D.push_back(new CStatueEnemy2D());
+	}
+	for (unsigned int i = 0; i < droneNum; i++)
+	{
+		vEnemy2D.push_back(new CDroneEnemy2D());
+	}
 	return true;
 }
 
@@ -166,6 +178,21 @@ bool CEnemy2DManager::Update(const double dElapsedTime)
 			vEnemy2D[i]->Update(dElapsedTime);
 		}
 	}
+
+	// CLEANUP: remove dead enemies safely
+	for (auto it = vEnemy2D.begin(); it != vEnemy2D.end();)
+	{
+		if (!(*it)->GetStatus())
+		{
+			delete* it;              // delete enemy object
+			it = vEnemy2D.erase(it); // erase pointer and advance iterator
+		}
+		else
+		{
+			++it;
+		}
+	}
+
 
 	return true;
 }

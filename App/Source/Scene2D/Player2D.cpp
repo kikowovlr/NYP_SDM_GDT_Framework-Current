@@ -416,7 +416,7 @@ bool CPlayer2D::Update(const double dElapsedTime)
 		{
 			pInventoryManager->BindToCharacter(this);
 			pInventoryItem = pInventoryManager->GetItem("Energy");
-			if (isGunPicked && pInventoryItem->GetCount() >= 10) // only shoot if player has 10 or more energy and has gun
+			if (isGunPicked && pInventoryItem->GetCount() >= 0) // only shoot if player has 10 or more energy and has gun
 			{
 				glm::vec2 temp = glm::normalize(glm::vec2(pMouseController->GetMousePositionX() - vec2Position.x,
 					CSettings::GetInstance()->cSimpleIniA.GetFloatValue("Size", "iWindowHeight", 600.0f) -

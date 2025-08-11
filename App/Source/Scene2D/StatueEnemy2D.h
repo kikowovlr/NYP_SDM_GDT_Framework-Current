@@ -24,14 +24,16 @@ class CPlayer2D;
 
 #include "Enemy2D.h"
 
-class CBlockEnemy2D : public CEnemy2D
+#include "ProjectileManager2D.h"
+
+class CStatueEnemy2D : public CEnemy2D
 {
 public:
 	// Constructor
-	CBlockEnemy2D(void);
+	CStatueEnemy2D(void);
 
 	// Destructor
-	 ~CBlockEnemy2D(void) override;
+	 ~CStatueEnemy2D(void) override;
 
 	// Init
 	bool Init(void) override;
@@ -54,56 +56,41 @@ public:
 protected:
 	enum FSM
 	{
-		IDLE = 0,
-		PATROL = 1,
-		FIND_BLOCK = 2,
-		MOVE_BLOCK = 3,
-		PLACE_BLOCK = 4,
-		SURPRISED = 5,
-		FLEE = 6,
-		WEARY = 7,
-		RETURN = 8,
+		INACTIVE = 0,
+		LOOKAROUND = 1,
+		CHASE = 2,
+		STUNNED = 3,
+		DEAD = 4,
+		RETURN = 5,
 		NUM_FSM
 	};
 
 	// Current FSM
 	FSM sCurrentFSM;
 
+	glm::vec2 initialPos;
+
+	float runMultiplier = 2.f;
+	
 	// max amt of time in each state
 	float maxIdleTime = 4.0f;
 	float maxPatrolTime = 5.0f;
+	
+	float detectionRadius = 100.f;
 
-	// store patrol points
-	std::vector<glm::vec2> patrolPoints; // patrol waypoints (world coord)
-	int currentPatrolPointIndex = 0;
-	float patrolThreshold = 2.f;
-	bool reversePatrolPath = false;
+	float deadDuration = 5.f;
 
-	float lastFindBlockTimer = 0.f;
-	float maxLastFoundBlockTime = 20.f;
+	bool isStunned = false;
+	float maxStunnedTime = 5.f;
+	float maxSearchTime = 7.f;
 
-	float detectionRadius = 150.f; // radius of which this enemy can detect the tiles
-	glm::ivec2 targetTileIndex;
-	bool hasTargetTile = false;
+	float positionThreshold = 2.f;
 
-	bool isSurprisedOrWeary = false;
-	bool isHoldingBlock = false;
+	bool isHit = false;
+	float hitCD = 0.f;
+	float attackCooldown = 0.f;
 
-	float surpriseRadius = 50.f; // dist from bullet to be surprised
-	glm::vec2 closestProjectilePos = glm::vec2(FLT_MAX, FLT_MAX);  // Init to something far away
-	float closestProjectileDist = FLT_MAX;
-	float maxShockedTime = 2.5f;
-
-	glm::vec2 fleeDir;
-	const int minTilesDist = 5;
-	const int maxTilesDist = 10;
-	bool isFleeTileFound = false;
-	glm::ivec2 fleeTargetTile = glm::ivec2(-1, -1);
-	float maxFleeTime = 5.f;
-
-	float maxWearyTime = 4.f;
-
-	float maxReturnTime = 5.f;
+	float maxReturnTime = 8.f;
 
 	// Let enemy2D interact with the player
 	bool InteractWithPlayer(void) override;
@@ -120,7 +107,5 @@ protected:
 	void UpdateSpriteAnimation() override;
 
 	void UpdateFSM(float dElapsedTime) override;
-
-	void SetupPatrolPoints(std::vector<glm::vec2> points);
 };
 

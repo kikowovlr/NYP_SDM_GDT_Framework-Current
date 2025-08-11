@@ -10,11 +10,19 @@
 #include <includes/gtc/matrix_transform.hpp>
 #include <includes/gtc/type_ptr.hpp>
 
+#include "Map2D.h"
+#include <vector>
+
 // store block info
 struct BlockInfo
 {
-	glm::vec2 defaultPos;
-	glm::vec2 currentPos;
-	bool hasMoved = false;
-	bool isInInventory = false;
+    glm::vec2 defaultPos;
+    glm::vec2 currentPos;
+    bool hasMoved = false;
+    bool isInInventory = false;
 };
+
+extern std::vector<BlockInfo> crateInfos;
+
+// Declare the function
+void InitializeBlockInfos(const CMap2D* pMap);

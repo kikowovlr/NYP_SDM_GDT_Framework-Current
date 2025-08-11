@@ -197,6 +197,12 @@ public:
 	bool IsEntranceDoor(int x, int y) const;
 	glm::ivec2 GetExitDoorPos() const;
 
+	// Check if a grid is valid
+	bool isValid(const glm::vec2& pos) const;
+	// Check if a grid is blocked
+	bool isBlocked(const unsigned int uiRow,
+		const unsigned int uiCol,
+		const bool bInvert = true) const;
 protected:
 	// The variable containing the rapidcsv::Document
 	// We will load the CSV file's content into this Document
@@ -216,7 +222,7 @@ protected:
 	// Tile Sizes
 	glm::vec2 vec2TileSize;
 	glm::vec2 vec2TileHalfSize;
-	const glm::vec2 vec2SizeTolerance = glm::vec2(1.f, 1.f); // higher value makes it easier for the player to navigate the map
+	const glm::vec2 vec2SizeTolerance = glm::vec2(1.f,1.f); // higher value makes it easier for the player to navigate the map
 
 	// Map containing texture IDs
 	map<int, int> MapOfTextureIDs;
@@ -239,12 +245,6 @@ protected:
 	// For A-Star PathFinding
 	// Build a path from vCameFromList after calling PathFind()
 	std::vector<glm::vec2> BuildPath() const;
-	// Check if a grid is valid
-	bool isValid(const glm::vec2& pos) const;
-	// Check if a grid is blocked
-	bool isBlocked(const unsigned int uiRow,
-		const unsigned int uiCol,
-		const bool bInvert = true) const;
 	// Convert a position to a 1D position in the array
 	int ConvertTo1D(const glm::vec2& pos) const;
 

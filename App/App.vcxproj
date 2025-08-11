@@ -13,6 +13,8 @@
   <ItemGroup>
     <ClCompile Include="Source\Scene2D\BlockEnemy2D.cpp" />
     <ClCompile Include="Source\Scene2D\BlockInfo.cpp" />
+    <ClCompile Include="Source\Scene2D\DroneEnemy2D.cpp" />
+    <ClCompile Include="Source\Scene2D\StatueEnemy2D.cpp" />
     <ClCompile Include="Source\SoundController\CDelayedSound.cpp" />
     <ClCompile Include="Source\MusicPlayer.cpp" />
     <ClCompile Include="Source\Scene2D\CharacterManager.cpp" />
@@ -37,6 +39,8 @@
   <ItemGroup>
     <ClInclude Include="Source\Scene2D\BlockEnemy2D.h" />
     <ClInclude Include="Source\Scene2D\BlockInfo.h" />
+    <ClInclude Include="Source\Scene2D\DroneEnemy2D.h" />
+    <ClInclude Include="Source\Scene2D\StatueEnemy2D.h" />
     <ClInclude Include="Source\SoundController\CDelayedSound.h" />
     <ClInclude Include="Source\MusicPlayer.h" />
     <ClInclude Include="Source\Scene2D\CharacterStates.h" />
